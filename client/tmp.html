@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monopoly Game Board</title>
+<style>
+  body, html { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+  .board { display: grid; grid-template-columns: repeat(11, 1fr); width: 90vmin; height: 90vmin; margin: auto; border: 2px solid #333; }
+  .cell { border: 1px solid #aaa; display: flex; align-items: center; justify-content: center; }
+  .corner { grid-row: span 2; grid-column: span 2; }
+  #go { grid-area: 1 / 11 / 3 / 13; }
+  #jail { grid-area: 1 / 1 / 3 / 3; }
+  #free-parking { grid-area: 11 / 1 / 13 / 3; }
+  #go-to-jail { grid-area: 11 / 11 / 13 / 13; }
+</style>
+</head>
+<body>
+<div class="board">
+  <div id="go" class="cell corner">GO</div>
+  <!-- Insert other cells here -->
+  <div id="jail" class="cell corner">Jail</div>
+  <!-- Insert other cells here -->
+  <div id="free-parking" class="cell corner">Free Parking</div>
+  <!-- Insert other cells here -->
+  <div id="go-to-jail" class="cell corner">Go to Jail</div>
+  <!-- Insert other cells here -->
+</div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Монополия</title>
+<style>
+  .board {
+    display: grid;
+    grid-template-columns: 100px repeat(7, 1fr) 100px;
+    grid-template-rows: 100px 1fr 1fr 1fr 100px;
+    max-width: 900px;
+    margin: 20px auto;
+  }
+  .cell {
+    border: 1px solid #000;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 50px;
+  }
+  .corner {
+    width: 100px;
+    height: 100px;
+  }
+  .top-row, .bottom-row { 
+    display: grid; 
+    grid-template-columns: repeat(7, 1fr); 
+  }
+  .side-row {
+    display: grid; 
+    grid-template-rows: repeat(3, 1fr);
+  }
+  .vertical-cell { 
+    writing-mode: vertical-lr; 
+    text-orientation: mixed;
+  }
+  /* Добавьте больше стилей по мере необходимости */
+</style>
+</head>
+<body>
+
+<div class="board">
+  <!-- Угловые ячейки -->
+  <div class="cell corner start-corner">СТАРТ</div>
+
+  <!-- Верхний ряд -->
+  <div class="cell top-row">
+    <!-- Здесь должны быть ваши ячейки для верхнего ряда -->
+  </div>
+
+  <div class="cell corner go-to-jail-corner">В ТЮРЬМУ</div>
+
+  <!-- Правый ряд -->
+  <div class="cell side-row right-column">
+    <!-- Вертикальные ячейки для правой колонки -->
+  </div>
+
+  <!-- Нижний ряд -->
+  <div class="cell bottom-row">
+    <!-- Здесь должны быть ваши ячейки для нижнего ряда -->
+  </div>
+
+  <div class="cell corner free-parking-corner">БЕСПЛАТНАЯ СТОЯНКА</div>
+
+  <!-- Левый ряд -->
+  <div class="cell side-row left-column">
+    <!-- Вертикальные ячейки для левой колонки -->
+  </div>
+
+  <div class="cell corner jail-corner">ТЮРЬМА</div>
+</div>
+
+</body>
+</html>

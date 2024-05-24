@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express-session": "^1.18.0",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.9.7",
+    "uuid": "^9.0.1"
+  }
+}

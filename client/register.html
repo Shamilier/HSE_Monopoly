@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/register.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <section class="container">
+        <div class="login-container">
+            <div class="circle circle-one"></div>
+            <div class="form-container">
+                <h1 class="opacity">REGISTRATION</h1>
+                <form id="registrationForm">
+                    <input type="text" name="email" id = "a1" placeholder="EMAIL">
+                    <input type="text" name="nickname" id = "a2" placeholder="NICKNAME">
+                    <div class="password-container">
+                        <input type="password" name="password" placeholder="PASSWORD" id="YourPassword"/>
+                        <div class="strengthMeter"></div>
+                    </div>
+                    <button type="submit" id="submitBtn" class="opacity">SUBMIT</button>
+                </form>
+                <div class="register-forget opacity">
+                    <a href="#" id="loginLink" class="animate">LOGIN</a>
+                    <a href="#" id="ForgetLink" class="animate">FORGOT PASSWORD</a>
+                </div>
+            </div> 
+            <div class="circle circle-two"></div>
+        </div>
+        <div class="theme-btn-container"></div>
+    <script src="/js/register.js"></script>
+</body>
+</html>

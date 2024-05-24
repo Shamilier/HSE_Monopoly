@@ -1,0 +1,202 @@
+body{
+    background-color: #1a1a2e;
+    letter-spacing: 1px;
+    font-family: "poppins";
+}
+/* ЗАГОЛОВОК */
+.header{
+        font-family: "poppins";
+        display: flex;
+        justify-content: space-between;
+        background-color: #1a1a2e;
+        padding-bottom: 20px;
+        border: 1px;
+}
+.left-menu {
+        font-family: "poppins";
+        margin-top: 20px;
+        margin-left: 20px;
+        text-align: left;
+        display: inline-block;
+
+}
+.left-menu>button{
+        font-family: "poppins";
+        height:50px;
+        width:50px;
+}
+
+.center-menu{
+        font-family: "poppins";
+        display: inline-block;
+        text-align: center;
+        margin-top: 10px;
+}
+
+.right-menu{
+        font-family: "poppins";
+        margin-top: 20px;
+        margin-right: 20px;
+        display: inline-block;
+}
+
+.hello{
+        font-family: "poppins";
+        display: inline;
+        color: rgb(255, 255, 255);
+        font-size: 55px;
+}
+.header-button{
+        margin-top: -10px;
+        margin: 3px;
+}
+.gg-profile {
+        margin: 3px;
+        font-size: 50px; /* или используйте большее значение для увеличения размера */
+}
+
+/* ОСНОВНАЯ ЧАСТЬ */
+
+.main-block{
+        margin-top: 20px;
+}
+
+/*  ЛЕВАЯ ПАНЕЛЬ*/
+
+.raiting{
+        display: inline;
+        margin-top: -15px;
+        float: left;
+        width: 30%;
+        height: 280px;
+        border-right: solid;
+        border-color: chocolate;
+}
+.raiting-header{
+        text-align: center;
+}
+.raiting-header>h3{
+        font-size:x-large;
+        display: inline;
+        color: rgb(255, 255, 255);
+}
+
+.paste-button {
+        margin-left: 5px;
+        position: relative;
+        display: inline;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.button {
+        background-color: #ffffff;
+        color: #212121;
+        padding: 8px 10px;
+        font-size: 15px;
+        font-weight: bold;
+        border: 2px solid transparent;
+        border-radius: 15px;
+        cursor: pointer;
+}
+.dropdown-content {
+        display: none;
+        font-size: 13px;
+        position: absolute;
+        z-index: 1;
+        min-width: 200px;
+        background-color: #212121;
+        border: 2px solid #ffffff;
+        border-radius: 0px 15px 15px 15px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+.dropdown-content a {
+        color: #ffffff;
+        padding: 8px 10px;
+        text-decoration: none;
+        display: block;
+        transition: 0.1s;
+}
+
+.dropdown-content a:hover {
+        background-color: #ffffff;
+        color: #212121;
+}
+
+.dropdown-content a:focus {
+        background-color: #212121;
+        color: #ffffff;
+}
+
+.dropdown-content #top:hover {
+        border-radius: 0px 13px 0px 0px;
+}
+
+.dropdown-content #bottom:hover {
+        border-radius: 0px 0px 13px 13px;
+}
+
+.paste-button:hover button {
+        border-radius: 15px 15px 0px 0px;
+}
+
+.paste-button:hover .dropdown-content {
+        display: block;
+}
+
+/* ЦЕНТРАЛЬНАЯ ЧАСТЬ */
+
+.user{
+        margin-top: 20px;
+        display: inline-flex;
+        flex-direction: row;
+        margin-left: 40px;
+}
+.user-photo {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Центрируем содержимое */
+        position: relative; /* Для позиционирования кнопки */
+}
+.profile-photo {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        cursor:auto; 
+        position: relative;
+}
+
+.buttons {
+        display: none; /* Изначально скрыты */
+        position: absolute; /* Позиционирование поверх фотографии */
+        left: 0;
+        bottom: 0;
+        width: 100%;
+}
+
+.user-photo:hover .buttons {
+        display: flex; /* Показать кнопки при наведении */
+        flex-direction: column; /* Кнопки друг под другом */
+}
+
+.user-info{
+        margin-top: -23px;
+        margin-left: 40px;
+        display: flex;
+        flex-direction: column;
+}
+.user-info>h1{
+        margin-bottom: 0px;
+        font-size: 35px;
+        color: rgb(255, 255, 255);
+}
+.other-info{
+        margin-top: 3px;
+        margin-left: -20px;
+
+}
+.other-info>li{
+        font-size: 20px;
+        margin: 3px;
+        color: rgb(255, 255, 255);
+}

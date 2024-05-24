@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Монополия</title>
+    <link rel="stylesheet" href="../css/game.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+</head>
+<body>
+    <!-- Информационная панель -->
+    <div id="info-panel">
+        <div id="left-menu">
+            <div id="timer">Время игры: <span id="time">00:00:00</span></div>
+            <div id="bet">Ставка: <span id="current-bet">0</span></div>
+        </div>
+        <div id="right-menu">
+            <button id="exit-game">Покинуть игру</button>
+        </div>
+    </div>
+
+    <!-- Информация об игроках -->
+    <div id="players-info">
+
+    </div>
+
+    <div id="popupContainer">
+        <button class="button" id="rollDiceButton">Бросить кубики</button>
+        <button class="button" id="buy">Купить</button>
+        <button class="button" id="cancel">Отказ</button>
+        <button class="button" id="buyBack">Выкупить</button>
+    </div>
+    
+
+
+    <div id="game-board">     
+        <div class="cell corner-cell top-left-corner"></div>
+
+        <div class="board-row top-row">
+        <!-- здесь будут ячейки для верхней строки -->
+        </div>
+
+        <div class="cell corner-cell top-right-corner"></div>
+
+        <div class="board-column right-column">
+            <!-- здесь будут ячейки для правой колонны -->
+        </div>
+        <div id="chat">
+            
+            <div id="sceneContainer"></div>
+
+            <div id="chat-messages"></div>
+            <input type="text" id="chat-input" placeholder="Введите сообщение...">
+            <button id="send-message">Отправить</button>
+        </div>
+        <div class="cell corner-cell bottom-right-corner"></div>
+
+        <!-- нижняя строка -->
+        <div class="board-row bottom-row">
+            <!-- здесь будут ячейки для нижней строки -->
+        </div>
+
+        <div class="cell corner-cell bottom-left-corner"></div>
+
+        <!-- левая колонка -->
+        <div class="board-column left-column">
+        <!-- здесь будут ячейки для левой колонны -->
+        </div>
+
+    
+    </div>
+
+
+
+    <script type="module" src="../js/game.js"></script>
+</body>
+</html>

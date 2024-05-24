@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Монополия - Главная страница</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href='https://unpkg.com/css.gg@2.0.0/icons/css/profile.css' rel='stylesheet'>
+    <link rel="stylesheet" href="css/main_page.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class = "left-menu">
+            <button class="settings-btn"><i class="fas fa-cog"></i></button>
+        </div>
+        <div class ="center-menu">
+            <h1 class="hello">Монополия</h1>
+        </div>
+        <div class="right-menu">
+            <button class="header-button">Друзья</button>
+            <button class="header-profile">
+            <i class="gg-profile"></i>
+            </button>
+        
+        </div>
+    </div>
+    <div class="main-block">
+
+        <div class="raiting">
+            <div class="raiting-header">
+                <h3 class="raiting-header-text">
+                    Рейтинг
+                </h3>
+                <div class="paste-button">
+                    <button class="button">Все &nbsp; ▼</button>
+                    <div class="dropdown-content">
+                        <a id="top" href="#">Друзья</a>
+                    </div>
+                </div>
+
+            </div>
+            <div class="raiting-body">
+
+            </div>
+        </div>
+
+        <div class="user">
+            <div class="user-profile">
+                <div class="user-photo" onclick="toggleButtons()">
+                    <img src="/images/default_photo.jpg" alt="Фото профиля" class="profile-photo" id="profilePhoto">
+                    <div class="buttons" style="display: none;">
+                        <button onclick="viewPhoto(); event.stopPropagation()">Посмотреть фотографию</button>
+                        <button onclick="document.getElementById('fileChooser').click(); event.stopPropagation()">Выбрать фото</button>
+                    </div>
+                    <input type="file" id="fileChooser" style="display: none;" onchange="previewFile()">
+                </div>
+            </div>
+
+            <div class="user-info">
+                <h1 class="nickname">
+                    <span id="nickname-placeholder"></span>
+                </h1>
+                <ul class="other-info">
+                    <li>Состояние:</li>
+                    <li>Место в Рейтинге:</li>
+                    <li>Всего игр:</li>
+                    <li>Побед:</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <form id = "create-game">
+        <input type="text" id = "password" placeholder="password" />
+        <input type="text" id = "players_count" placeholder="players_count" />
+        <input type="text" id = "map" placeholder="map" />
+        <input type="text" id = "bet" placeholder="bet" />
+        <input type="submit" value="create"/>
+    </form>
+
+    <div id="games">
+
+    </div>
+    <script  type = "module", src="js/main_page.js"></script>
+</body>
+</html>
