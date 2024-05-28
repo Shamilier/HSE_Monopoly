@@ -431,3 +431,37 @@ body {
     position: absolute;
     z-index: 1000;
 }
+#chatContainer {
+    position: absolute; /* или position: fixed; в зависимости от вашей структуры */
+    top: 400px; /* настройте в зависимости от вашего дизайна */
+    right: -150px; /* настройте в зависимости от вашего дизайна */
+    width: 550px; /* ширина контейнера чата */
+    height: 1000px; /* или фиксированная высота */
+}
+
+#tooltip {
+    position: relative;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 1);
+    padding: 10px;
+    height: 540px;
+    width: 600px; /* исправлено */
+    z-index: 1100;
+    display: none;
+}
+
+#tooltip img {
+    position: relative;
+    top: 140px;
+    left: 0px; 
+    width: 100%; /* изменено */
+    height: 72%; /* изменено */
+}
+
+#tooltip p{
+    position: relative;
+    top: -350px
+}
+#prevButton, #nextButton {
+    margin: 10px;
+}

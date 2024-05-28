@@ -3,7 +3,7 @@ const mysql = require('mysql');
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-// const bcrypt = require('bcrypt');
+const path = require('path');
 const { Server } = require("ws");
 const { v4: uuid } = require("uuid");
 const bcrypt = require('bcryptjs');
@@ -31,12 +31,12 @@ const PORT = 3000;
 
 function generateRandomDiceValues() {
     // Фиксированные начальные позиции для обоих кубиков
-    const initialPosition1 = [-1, 10, 0];
-    const initialPosition2 = [1, 10, 0];
+    const initialPosition1 = [-7, 10, 0];
+    const initialPosition2 = [-5, 10, 0];
     
     // Генерация скоростей с меньшим подъемом вверх
     const randomVelocity = () => [
-        Math.random() * 2 - 1, // Небольшой наклон влево-вправо
+        Math.random() * 5 - 1, // Небольшой наклон влево-вправо
         Math.random() * -8 - 5, // Сильное падение вниз, слегка подлетающее вверх
         Math.random() * 5 - 1 // Небольшой наклон вперед-назад
     ];
@@ -84,7 +84,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
 }));
-
+app.use('/images', express.static(path.join(__dirname, "..", 'client', 'images')));
 // Маршруты
 // Маршрут обработки POST-запроса на "/register"
 app.post('/register', async (req, res) => {
@@ -165,7 +165,6 @@ app.post('/login', async (req, res) => {
     });
 });
 // Маршрут для обработки GET-запроса на "/"
-const path = require('path');
 const { error } = require('console');
 
 app.get('/login.html', (req, res) => {
@@ -238,6 +237,8 @@ app.get('/api/userinfo', (req, res) => {
 });
 
 
+
+
 app.get('/api/game/:gameId/players', async (req, res) => {
     try {
         const { gameId } = req.params;
@@ -251,9 +252,6 @@ app.get('/api/game/:gameId/players', async (req, res) => {
                 }
             });
         });
-
-        // Здесь предполагается, что у тебя в таблице есть колонки nickname, money и properties
-        // Возвращаем информацию в JSON формате
         res.json(playersData);
     } catch (error) {
         console.error('Ошибка при выполнении запроса к базе данных:', error);
@@ -449,7 +447,7 @@ gamedb.query(updateTurnQuery, [nextPlayerColor, gameId], (error, results) => {
     });
 }
 
-function updatePosition(dice1, dice2, gameId, nickname, nextPlayerColor){
+function updatePosition(dice1, dice2, gameId, nickname, nextPlayerColor, currentPlayerColor){
     const diceTotal = dice1 + dice2;
     const updatePositionQuery = `
         UPDATE state
@@ -469,14 +467,14 @@ function updatePosition(dice1, dice2, gameId, nickname, nextPlayerColor){
                 return;
             }
             if (cellResults.length > 0 & (dice1 != 0 & dice2 != 0)) {
-                let go_jail = -1;
                 const cellData = cellResults[0];
-                if (cellData.position === 34){ // Если попали на поле направления в тюрьму
-                    let go_jail = 1;
-                }
                 if ((dice1 != dice2 || cellData.position === 34) & (dice1 != 0 & dice2 != 0)){
                     updateTurn(nextPlayerColor, gameId);
                 }
+                // if (cellData.owner != "white" && cellData.owner != "None" && currentPlayerColor != cellData.owner){
+                //     text = `Попал на чужое поле и должен заплатить ${cellData.cost}`;
+                //     sendMessage(text, nickname, gameId);
+                // }
             // Отправляем данные о клетке всем участникам игры
                 GamesWithPlayers[gameId].forEach(playerNickname => {
                     if (ClientConnections[playerNickname]) {
@@ -488,8 +486,8 @@ function updatePosition(dice1, dice2, gameId, nickname, nextPlayerColor){
                             owner: cellData.owner,
                             fieldType: cellData.type.split('.')[0].split(',')[0],
                             nickname: nickname,
-                            go_jail:go_jail,
-                            oldPosition: cellData.position - diceTotal
+                            oldPosition: cellData.position - diceTotal,
+                            currentPlayerColor: currentPlayerColor
                         }));
                     }
                 });
@@ -793,7 +791,7 @@ function s(){
                                     const text = `Выбросил ${dice1}:${dice2} и выходит из тюрьмы!`;
                                     sendMessage(text, nickname, gameId);
                                     updateTurn(currentPlayer.color, gameId);
-                                    updatePosition(0, 0, gameId, nickname, 'red');
+                                    updatePosition(0, 0, gameId, nickname, 'red', 'red');
                                 });
                             } else if (currentPlayer.is_jail === 0) {
                                 // Игрок пропустил три хода и выходит из тюрьмы
@@ -806,7 +804,7 @@ function s(){
                                     const text = `Выходит из тьюрьмы после трех ходов`;
                                     sendMessage(text, nickname, gameId);
                                     updateTurn(currentPlayer.color, gameId);
-                                    updatePosition(0, 0, gameId, nickname, 'red');
+                                    updatePosition(0, 0, gameId, nickname, 'red', 'red');
                                 });
                             } else if (currentPlayer.is_jail > 0) {
                                 // Игрок остаётся в тюрьме
@@ -820,7 +818,7 @@ function s(){
                                     sendMessage(text, nickname, gameId);
                                     updateTurn(nextPlayerColor, gameId);
                                     console.log(nextPlayerColor)
-                                    updatePosition(0, 0, gameId, nickname, 'red');
+                                    updatePosition(0, 0, gameId, nickname, 'red', 'red');
                                     // console.log(`Игрок ${nickname} остаётся в тюрьме (ходов в тюрьме: ${currentPlayer.jail_turns - 1})`); //chat
                                 });
                             }
@@ -828,7 +826,7 @@ function s(){
                             const text = `выбросил ${dice1}:${dice2}`;
                             sendMessage(text, nickname, gameId); // Отправляю сообщение всм клентам игры
                             const diceTotal = dice1 + dice2; // Сумма кубиков
-                            updatePosition(dice1,dice2, gameId, nickname, nextPlayerColor);
+                            updatePosition(dice1,dice2, gameId, nickname, nextPlayerColor, color);
                         }
                     } else {
                         console.error('Не ваш ход!');
@@ -958,6 +956,72 @@ function s(){
                         }
                     }
                 });
+            } else if (message.type === "PayMessage"){// owner - цвет игрока который владеет полем
+                const { gameId, position, nickname, cellCost, cellOwner, currentPlayerColor } = message;
+                if (nickname === cellOwner){
+                    text = `Попал на чужое поле и должен выплатить ${cellCost}`;
+                    sendMessage(text, nickname, gameId);
+                }
+
+                GamesWithPlayers[gameId].forEach(playerNickname => {
+                    if (ClientConnections[playerNickname]) {
+                        ClientConnections[playerNickname].send(JSON.stringify({ 
+                            type: 'Pay!',
+                            gameId: gameId, 
+                            cellOwner: cellOwner,
+                            cellCost: cellCost,
+                            nickname: nickname
+                        }));
+                    }
+                });
+            } else if (message.type === "Payed"){// owner - цвет игрока который владеет полем
+                const {cellOwner, cellCost, nickname, gameId} = message;
+
+                // Запрос для получения цвета игрока, баланса и свойств
+                const queryColorBalanceProperties = "SELECT color, balance, properties FROM state WHERE id = ? AND player_id = ?";
+                gamedb.query(queryColorBalanceProperties, [gameId, nickname], (error, results) => {
+                    if (error) {
+                        console.error('Ошибка при извлечении цвета, баланса и свойств:', error);
+                        return;
+                    }
+            
+                    if (results.length > 0) {
+                        const playerColor = results[0].color;
+                        const playerBalance = results[0].balance;
+                        if (playerBalance >= cellCost){
+                            const getNameWhoOwns = "SELECT player_id FROM state WHERE color = ? AND id = ?";
+                            gamedb.query(getNameWhoOwns, [cellOwner, gameId], (error, result) => {
+                                if (error){
+                                    console.log("Ошибка в функции Payed, 1", error);
+                                }
+                                const nicknameWhoOwns = result[0].player_id;
+                                const ubdateBalance = "UPDATE state SET balance = balance - ? WHERE id = ? AND player_id = ?";
+                                gamedb.query(ubdateBalance, [cellCost/2, gameId, nickname], (error) => {
+                                    if (error){
+                                        console.log("Ошибка Payed, 2", error);
+                                    } else{
+                                        gamedb.query(ubdateBalance, [-cellCost/2, gameId, nicknameWhoOwns], (error) => {
+                                            if (error){
+                                                console.log("Ошибка Payed, 2", error);
+                                            } else{
+                                                GamesWithPlayers[gameId].forEach(playerNickname => {
+                                                    if (ClientConnections[playerNickname]) {
+                                                        ClientConnections[playerNickname].send(JSON.stringify({ 
+                                                            type: 'fieldBought'
+                                                        }));
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            });
+                        }
+                    } else {
+                        console.error('Игрок не найден или цвет не задан');
+                    }
+                });
+
             }
             
         });

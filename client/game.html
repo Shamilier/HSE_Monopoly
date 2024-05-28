@@ -29,7 +29,9 @@
         <button class="button" id="rollDiceButton">Бросить кубики</button>
         <button class="button" id="buy">Купить</button>
         <button class="button" id="cancel">Отказ</button>
+        <button class="button" id="pay">Оплатить</button>
         <button class="button" id="buyBack">Выкупить</button>
+        <button class="button" id="lay">Заложить</button>   
     </div>
     
 
@@ -49,6 +51,14 @@
         <div id="chat">
             
             <div id="sceneContainer"></div>
+            <div id="chatContainer">
+                <div id="tooltip" style="display: none;">
+                    <img id="tooltipImage" src="" alt="Image">
+                    <p id="tooltipText"></p>
+                </div>
+            </div>
+            
+            
 
             <div id="chat-messages"></div>
             <input type="text" id="chat-input" placeholder="Введите сообщение...">

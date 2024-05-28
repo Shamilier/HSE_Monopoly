@@ -8,6 +8,9 @@ let isDiceButtonActive = false;
 let lastRollDiceHandler = null;
 let lastBuyHandler = null;
 let lastCancelHandler = null;
+let lastPayHandler = null;
+let lastLayHandler = null;
+let lastBuyBackHandler = null;
 s();
 // ---------------------------------------
 
@@ -64,9 +67,10 @@ async function loadAndDisplayPlayersInfo(gameId) {
 async function getUserData() {
     try {
         const response = await fetch('/api/userinfo');
-        if (!response.ok) throw new Error('Не удалось загрузить информацию пользователя');
-        const data = await response.json();
-        return data;
+        if (!response.ok) {
+          throw new Error('Не удалось загрузить информацию пользователя');
+        }
+        return await response.json();
     } catch (error) {
         console.error(error);
         return null; // или можно вернуть пустой объект {}, в зависимости от того, что предпочтительнее
@@ -80,7 +84,9 @@ function requestRegistration(gameId, nickname){
 // ---------------------------------------------------------------------------
 
 function s(){
-    if (isWebSocketSetup) return; // Если WebSocket уже настроен, ничего не делаем
+    if (isWebSocketSetup) {
+      return;
+    } // Если WebSocket уже настроен, ничего не делаем
     isWebSocketSetup = true;
 
     ws.onopen = async () => {
@@ -88,7 +94,7 @@ function s(){
         const urlParts = window.location.pathname.split('/');
         const gameId = urlParts[urlParts.length - 1];
         let userData = await getUserData();
-        let nickname = userData.nickname;
+        let {nickname} = userData;
         await loadAndDisplayPlayersInfo(gameId);
         requestRegistration(gameId, nickname);
     };
@@ -120,17 +126,30 @@ function s(){
                 const cellName = message.name;
                 const cellCost = message.cost;
                 const cellOwner = message.owner;
-                const fieldType = message.fieldType
+                const {fieldType} = message
                 const whoo = message.nickname;
-                const oldPosition = message.oldPosition;
-                updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, oldPosition);
+                const {oldPosition} = message;
+                const {currentPlayerColor} = message;
+                updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, oldPosition, currentPlayerColor);
                 break;
             case 'fieldBought':
                 afterBought()
                 break;
             case 'jumpJail':
-                const color = message.color;
+                const {color} = message;
                 jumpJail(color);
+                break;
+            case 'Pay!':
+                // const {gameId} = message.gameId;
+                // const {cellOwnerPay} = message.cellOwner;
+                // const {cellCostPay} = message.cellCost;
+                // const {nickname} = message.nickname;
+                const { gameId } = message;
+                const cellOwnerPay = message.cellOwner;
+                const cellCostPay = message.cellCost;
+                const {nickname} = message;
+                console.log(nickname);
+                displayPayButton(cellOwnerPay, cellCostPay, nickname);
                 break;
             default:
                 console.error(`Неизвестный тип сообщения: ${message.type}`);
@@ -145,9 +164,8 @@ function pad(value) {
     return value.toString().padStart(2, '0');
 }
 function getGameIdFromUrl() {
-    const pathname = window.location.pathname; // Получаем путь текущего окна
-    const gameId = pathname.split('/').pop(); // Получаем последний сегмент пути
-    return gameId;
+    const {pathname} = window.location; // Получаем путь текущего окна
+    return pathname.split('/').pop();
 }
 
 // Функция для обновления таймера на странице
@@ -228,7 +246,7 @@ function placeInitialTokens(Data, num_players) {
 
     playerColors.forEach(color => {
         if (playerData[color]) { // Проверяем, существуют ли данные для данного цвета
-            const position = playerData[color].position;
+            const {position} = playerData[color];
             const token = document.createElement('div');
             token.className = 'player-token';
             token.style.backgroundColor = color;
@@ -254,8 +272,7 @@ async function getBoardData(gameId) {
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const boardData = await response.json();
-    return boardData;
+    return await response.json();
 }
 
 async function createBoard() {
@@ -555,6 +572,7 @@ async function createBoard() {
             leftColumn.appendChild(cell);
         }
         placeInitialTokens(playersData, playersData.length)
+        INFORMATION();
         return ws.send(JSON.stringify({type:'board_is_ready', gameId:gameId }))
     }
 }
@@ -566,7 +584,9 @@ function updateCells(boardData, gameId){
             const nameElement = cellElement.querySelector('.name');
             const priceBar = cellElement.querySelector('.price-bar-common, .price-bar-right, .price-bar-left');
 
-            if (nameElement) nameElement.textContent = cellData.name;
+            if (nameElement) {
+                nameElement.textContent = cellData.name;
+            }
             if (cellData.cost !== -1 && priceBar) {
                 priceBar.textContent = formatCost(cellData.cost);
                 priceBar.style.backgroundColor = parseColor(cellData.type);
@@ -600,7 +620,7 @@ async function jumpJail(color){
 
     playersData.forEach(player =>{
         if (player.turn === 1){
-            displayRollDiceButton();
+            displayRollDiceButton(player.turn);
         }
     })
 }
@@ -614,7 +634,7 @@ async function afterBought(){
 
     playersData.forEach(player =>{
         if (player.turn === 1){
-            displayRollDiceButton();
+            displayRollDiceButton(player.turn);
         }
     })
     
@@ -647,7 +667,7 @@ function Animacion(oldPosition, pos, existingToken, callback) {
 }
 
 
-async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, oldPosition) {
+async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, oldPosition, currentPlayerColor) {
     const gameId = getGameIdFromUrl();
     const fullData = await getBoardData(gameId);
     const boardData = fullData.board;
@@ -669,13 +689,15 @@ async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, 
     });
 
     await Promise.all(animations);
-
+    console.log('currentPlayerColor', currentPlayerColor);
     // Обработка специальных полей
-    
-    if (['start', 'lottery', 'jail', 'delay', 'casino', 'back', 'tax'].includes(fieldType)) {
+    if (cellOwner != 'white' && cellOwner != 'None' && cellOwner != currentPlayerColor){
+        ws.send(JSON.stringify({ type: 'PayMessage', gameId: gameId, position: pos, nickname: whoo, cellCost:cellCost, cellOwner:cellOwner, currentPlayerColor:currentPlayerColor}));
+        // displayPayButton(pos, cellName, cellCost, cellOwner, fieldType, whoo);
+    }else if (['start', 'lottery', 'jail', 'delay', 'casino', 'back', 'tax'].includes(fieldType)) {
         playersData.forEach(player => {
             if (player.turn === 1) {
-                displayRollDiceButton();
+                displayRollDiceButton(player.turn);
             }
         });
     } else if (fieldType === "go_jail") {
@@ -686,7 +708,7 @@ async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, 
     } else {
         playersData.forEach(player => {
             if (player.turn === 1) {
-                displayRollDiceButton();
+                displayRollDiceButton(player.turn);
             }
         });
     }
@@ -708,6 +730,43 @@ async function getCurrentPlayerInfo(gameId) {
     }
 }
 
+async function displayPayButton(cellOwner, cellCost, whoo){
+    // console.log(whoo);
+    const gameId = getGameIdFromUrl();
+    const turn_info = await getCurrentPlayerInfo(gameId);
+    const currentPlayerId = turn_info.currentPlayer;
+    const currentColor = turn_info.currentColor;
+    const userData = await getUserData();
+    const {nickname} = userData;
+
+    const popupContainer = document.getElementById('popupContainer');
+    const payButton = document.getElementById('pay');
+    const buyBack = document.getElementById('buyBack');
+    const layButton = document.getElementById('lay');
+    if (whoo === nickname) {  
+        popupContainer.style.display = 'block';
+        payButton.style.display = 'block';
+        buyBack.style.display = 'block';
+        layButton.style.display = 'block';
+        popupContainer.style.zIndex = 1000;
+        if (lastPayHandler) {
+            payButton.removeEventListener('click', lastPayHandler);
+        }
+        const handlePayButtonClick = function() {
+            popupContainer.style.display = 'none';
+            payButton.style.display = 'none';
+            layButton.style.display = 'none';
+            buyBack.style.display = 'none';
+            ws.send(JSON.stringify({type:'Payed', cellOwner: cellOwner, cellCost:cellCost, nickname: whoo, gameId:gameId }));
+            return; //----------------------------------------------------------------------------------------------------
+        };
+        payButton.addEventListener('click', handlePayButtonClick);
+        lastBuyHandler = handlePayButtonClick;  // Сохраняем обработчик
+
+    } else {
+        popupContainer.style.display = 'none';
+    }
+}
 
 async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, whoo) {
     try {
@@ -785,12 +844,12 @@ document.getElementById('sceneContainer').appendChild(renderer.domElement);
 
 // Свет
 const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(-5, 10, -5);
+light.position.set(-10, 20, -10);
 scene.add(light);
 
 // Создаем физический мир Cannon.js
 const world = new CANNON.World();
-world.gravity.set(0, -9.8, 0);
+world.gravity.set(0, -18, 0);
 world.broadphase = new CANNON.NaiveBroadphase();
 world.solver.iterations = 40;
 
@@ -798,7 +857,7 @@ world.solver.iterations = 40;
 const groundMaterial = new CANNON.Material("groundMaterial");
 
 // Размеры пола
-const groundWidth = 23;
+const groundWidth = 12;
 const groundLength = 12;
 const groundThickness = 0.5;
 
@@ -806,7 +865,7 @@ const groundThickness = 0.5;
 const groundShape = new CANNON.Box(new CANNON.Vec3(groundWidth / 2, groundThickness / 2, groundLength / 2));
 const groundBody = new CANNON.Body({ mass: 0, material: groundMaterial });
 groundBody.addShape(groundShape);
-groundBody.position.set(0, groundThickness / 2, 0);
+groundBody.position.set(-5, groundThickness / 2, 0);
 world.addBody(groundBody);
 
 // Визуализация пола с помощью Three.js
@@ -826,11 +885,11 @@ function addVisibleWall(position, size) {
     world.addBody(wallBody);
 
     // Визуальная стена в Three.js
-    // const wallGeometry = new THREE.BoxGeometry(...size);
-    // const wallMaterialVisual = new THREE.MeshBasicMaterial({ color: 0x888888 });
-    // const wallMesh = new THREE.Mesh(wallGeometry, wallMaterialVisual);
-    // wallMesh.position.set(...position);
-    // scene.add(wallMesh);
+//     const wallGeometry = new THREE.BoxGeometry(...size);
+//     const wallMaterialVisual = new THREE.MeshBasicMaterial({ color: 0x888888 });
+//     const wallMesh = new THREE.Mesh(wallGeometry, wallMaterialVisual);
+//     wallMesh.position.set(...position);
+//     scene.add(wallMesh);
 }
 
 // Размеры и позиции стен
@@ -838,10 +897,10 @@ const wallHeight = 40;
 const wallSizeFrontBack = [groundWidth, wallHeight, 0.2];
 const wallSizeLeftRight = [0.2, wallHeight, groundLength];
 
-addVisibleWall([0, wallHeight / 2, groundLength / 2], wallSizeFrontBack); // Передняя стена
-addVisibleWall([0, wallHeight / 2, -groundLength / 2], wallSizeFrontBack); // Задняя стена
-addVisibleWall([groundWidth / 2, wallHeight / 2, 0], wallSizeLeftRight); // Правая стена
-addVisibleWall([-groundWidth / 2, wallHeight / 2, 0], wallSizeLeftRight); // Левая стена
+addVisibleWall([-5, wallHeight / 2, groundLength / 2], wallSizeFrontBack); // Передняя стена
+addVisibleWall([-5, wallHeight / 2, -groundLength / 2], wallSizeFrontBack); // Задняя стена
+addVisibleWall([groundWidth / 2 - 5, wallHeight / 2, 0], wallSizeLeftRight); // Правая стена
+addVisibleWall([-groundWidth / 2 - 5, wallHeight / 2, 0], wallSizeLeftRight); // Левая стена
 
 
 
@@ -887,7 +946,7 @@ function createDiceMaterial(faceValue) {
     return new THREE.MeshLambertMaterial({ map: texture });
 }
 // Функция создания кубика
-function createDice() {
+function createDice(initialPosition) {
     // Определим шесть граней кубика
     const materials = [
         createDiceMaterial(1),
@@ -901,13 +960,14 @@ function createDice() {
     // Создаем кубик в Three.js
     const diceGeometry = new THREE.BoxGeometry(1, 1, 1);
     const diceMesh = new THREE.Mesh(diceGeometry, materials);
+    diceMesh.position.set(...initialPosition);
     scene.add(diceMesh);
 
     // Создаем физическое тело кубика в Cannon.js
     const diceShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
     const diceBody = new CANNON.Body({
         mass: 50,
-        position: new CANNON.Vec3(0, 100, 0),
+        position: new CANNON.Vec3(...initialPosition),
         shape: diceShape,
         material: new CANNON.Material("diceMaterial")
     });
@@ -916,8 +976,9 @@ function createDice() {
     return { mesh: diceMesh, body: diceBody };
 }
 
-const dice1 = createDice();
-const dice2 = createDice();
+const dice1 = createDice([-2, 5, 0]); // Задаем начальную позицию для первого кубика
+const dice2 = createDice([2, 5, 0]);  // Задаем начальную позицию для второго кубика
+
 
 // Камера расположена сверху, направлена вниз
 camera.position.set(0, 16, 0);
@@ -1075,15 +1136,15 @@ function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
 }
-async function displayRollDiceButton() {
+async function displayRollDiceButton(p_turn = '') {
     try {
         const gameId = getGameIdFromUrl();
         const turn_info = await getCurrentPlayerInfo(gameId);
         console.log("displayRollDiceButton, Ход:", turn_info );
         const currentPlayerId = turn_info.currentPlayer;
-        const currentColor = turn_info.currentColor;
+        const {currentColor} = turn_info;
         const userData = await getUserData();
-        const nickname = userData.nickname;
+        const {nickname} = userData;
 
         const popupContainer = document.getElementById('popupContainer');
         const rollDiceButton = document.getElementById('rollDiceButton');
@@ -1142,8 +1203,54 @@ document.getElementById('send-message').addEventListener('click', function() {
 
 
 
-async function buy(player){
+// Функция для показа всплывающего окна
+function showTooltip(imageSrc, text) {
+    const tooltip = document.getElementById('tooltip');
+    const tooltipImage = document.getElementById('tooltipImage');
+    const tooltipText = document.getElementById('tooltipText');
     
+    tooltipImage.src = imageSrc;
+    tooltipText.textContent = text;
+    
+    tooltip.style.display = 'block';
+}
+
+// Функция для скрытия всплывающего окна
+function hideTooltip() {
+    const tooltip = document.getElementById('tooltip');
+    tooltip.style.display = 'none';
+}
+
+async function INFORMATION() {
+    const gameId = getGameIdFromUrl();
+    const fullData = await getBoardData(gameId);
+    const boardData = fullData.board;
+    boardData.forEach((cellData, index) => {
+        const cellElement = document.querySelector(`.cell[data-position="${index}"], .cell-w[data-position="${index}"]`);
+        if (cellElement) {
+            cellElement.addEventListener('click', event => {
+                const position = index;
+                const imageSrc = `/images/1_im${index}.jpg`; // Путь к изображению для данного поля
+                const text = `Описание для поля ${index}`; // Описание для данного поля
+                try {
+                    showTooltip(imageSrc, text);
+                } catch {
+                    const imageSrc = `/images/test_photo.jpg`; // Путь к изображению для данного поля
+                    showTooltip(imageSrc, text);
+                }
+            });
+        }
+    });
+
+    document.addEventListener('click', event => {
+        const tooltip = document.getElementById('tooltip');
+        const isClickInsideTooltip = tooltip.contains(event.target);
+        const isClickInsideField = Array.from(document.querySelectorAll('.cell, .cell-w')).some(field => field.contains(event.target));
+
+        if (!isClickInsideTooltip && !isClickInsideField) {
+            hideTooltip();
+        }
+    });
 }
 
 
