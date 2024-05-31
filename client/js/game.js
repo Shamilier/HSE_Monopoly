@@ -11,6 +11,9 @@ let lastCancelHandler = null;
 let lastPayHandler = null;
 let lastLayHandler = null;
 let lastBuyBackHandler = null;
+let lastBuildHandler = null;
+let lastCancelBuildHandler = null;
+let buildHandlers = [];
 s();
 // ---------------------------------------
 
@@ -23,7 +26,7 @@ async function sendMessage(text) {
 }
 
 function displayChatMessage(text, from) {
-    const chat = document.getElementById('chat-messages'); // Предполагается, что у тебя есть элемент с id='chat'
+    const chat = document.getElementById('chat-messages'); // Предполагается, что есть элемент с id='chat'
     const messageElement = document.createElement('div');
     messageElement.textContent = `${from}: ${text}`;
     chat.appendChild(messageElement); // Добавляем новое сообщение в конец списка
@@ -36,8 +39,11 @@ function formatCurrency(amount) {
 }
 
 async function loadAndDisplayPlayersInfo(gameId) {
+    const arr = {"red": "#771622", "blue":"#3232d473", "green": "#437730", "yellow":"rgba(255, 253, 0, 0.71)"}
     const response = await fetch(`/api/game/${gameId}/players`);
-    if (!response.ok) throw new Error('Не удалось загрузить информацию об игроках');
+    if (!response.ok) {
+        throw new Error('Не удалось загрузить информацию об игроках');
+    }
     const players = await response.json();
     // players = JSON.parse(players);
 
@@ -48,27 +54,59 @@ async function loadAndDisplayPlayersInfo(gameId) {
         // Создаем новый элемент для каждого игрока
         const playerElement = document.createElement('div');
         playerElement.className = 'player';
-        // <img src="${player.avatar || 'default-avatar.jpg'}" alt="Аватар игрока">
         playerElement.innerHTML = `
-            <div class="player-avatar">
-            </div>
-            <div class="player-details">
-                <span class="player-name">${player.player_id}</span>
-                <span class="player-money">${formatCurrency(player.balance)}</span>
-                <span class="player-properties">${formatCurrency(player.properties_cost)}</span>
-            </div>
-        `;
-        // playerElement.style.backgroundColor = player.color;
+        <div class="player-avatar"></div>
+        <div class="player-details">
+            <span class="player-name">${player.player_id}</span>
+            <span class="player-money">₽${formatCurrency(player.balance)}</span>
+            <span class="player-properties">₽${formatCurrency(player.properties_cost)}</span>
+        </div>
+    `;
+        playerElement.style.backgroundColor = arr[player.color];
         playersInfoElement.appendChild(playerElement);
     });
+    document.querySelectorAll('#players-info .player').forEach(player => {
+        const colors = {'rgba(50, 50, 212, 0.45)': 'rgb(0, 0, 255)', 'rgb(119, 22, 34)': 'rgb(255, 0, 0)', 'rgb(67, 119, 48)': 'rgb(0, 128, 0)','rgba(255, 253, 0, 0.71)': 'rgb(255, 255, 0)',}//rgb(0, 0, 255)
+        player.addEventListener('mouseenter', function() {
+            const playerColor = getComputedStyle(player).backgroundColor;
+            dimNonPlayerCells(colors[playerColor]);
+        });
+    
+        player.addEventListener('mouseleave', function() {
+            undimAllCells();
+        });
+    });
 }
+
+function dimNonPlayerCells(currentColor) {
+    const cells = document.querySelectorAll('.cell, .cell-h, .cell-w');
+    cells.forEach(cell => {
+        const cellStyle = getComputedStyle(cell);
+        const ownerColor = cellStyle.backgroundColor; // Получаем цвет фона
+        // console.log(ownerColor === );
+
+        if (ownerColor != currentColor) { // Сравниваем с цветом текущего игрока
+            cell.classList.add('dimmed');
+        } else {
+            cell.classList.remove('dimmed');
+        }
+    });
+}
+
+function undimAllCells() {
+    const cells = document.querySelectorAll('.cell, .cell-h, .cell-w');
+    cells.forEach(cell => {
+        cell.classList.remove('dimmed');
+    });
+}
+
 
 
 async function getUserData() {
     try {
         const response = await fetch('/api/userinfo');
         if (!response.ok) {
-          throw new Error('Не удалось загрузить информацию пользователя');
+            throw new Error('Не удалось загрузить информацию пользователя');
         }
         return await response.json();
     } catch (error) {
@@ -85,7 +123,7 @@ function requestRegistration(gameId, nickname){
 
 function s(){
     if (isWebSocketSetup) {
-      return;
+        return;
     } // Если WebSocket уже настроен, ничего не делаем
     isWebSocketSetup = true;
 
@@ -140,16 +178,15 @@ function s(){
                 jumpJail(color);
                 break;
             case 'Pay!':
-                // const {gameId} = message.gameId;
-                // const {cellOwnerPay} = message.cellOwner;
-                // const {cellCostPay} = message.cellCost;
-                // const {nickname} = message.nickname;
                 const { gameId } = message;
                 const cellOwnerPay = message.cellOwner;
                 const cellCostPay = message.cellCost;
                 const {nickname} = message;
                 console.log(nickname);
                 displayPayButton(cellOwnerPay, cellCostPay, nickname);
+                break;
+            case 'House':
+                afterHouse();
                 break;
             default:
                 console.error(`Неизвестный тип сообщения: ${message.type}`);
@@ -158,7 +195,7 @@ function s(){
 }
 
 
-// **********************************************************************************************************************8
+// **********************************************************************************************************************
 // Функция для добавления ведущего нуля
 function pad(value) {
     return value.toString().padStart(2, '0');
@@ -292,44 +329,54 @@ async function createBoard() {
 
     if (boardData.length > 43){
     // Создание верхней строки
-        for (let i = 0; i < 28; i+=2) {
-            let cell = document.createElement('div');
-            let priceBar = document.createElement('div'); // Элемент для верхней полосы с ценой
-            let name = document.createElement('div'); // Элемент для имени
-        
-            name.textContent = boardData[i].name; // Добавляем имя
-            name.className = 'name'; // Класс для стилей имени
-                // Устанавливаем цвет владельца, если поле не служебное
-            let ownerColor = getOwnerColor(boardData[i].owner);
-            if (ownerColor) {
-                cell.style.backgroundColor = ownerColor;
-            }
-            cell.setAttribute('data-position', Math.floor(i/2));
-            if (i === 0 || i === 26) {
-                cell.className = "cell corner-cell";
-            } else {
-                cell.className = 'cell cell-h';
-                if (boardData[i].cost != -1) {
-                    let formattedCost = formatCost(boardData[i].cost);
-                    priceBar.textContent = formattedCost; // Устанавливаем текст цены
-                    if (boardData[i].type.split('.')[0] === 'field') {
-                        priceBar.style.backgroundColor = parseColor(boardData[i].type); // Устанавливаем цвет фона для .price-bar
-                    }
-                    priceBar.className = 'price-bar-common'; // Класс для стилей верхней полосы
-                    cell.appendChild(priceBar); // Добавляем верхнюю полосу в ячейку
+    for (let i = 0; i < 28; i += 2) {
+        const houseNum = boardData[i].houses;
+
+        let cell = document.createElement('div');
+        let priceBar = document.createElement('div'); // Элемент для верхней полосы с ценой
+        let name = document.createElement('div'); // Элемент для имени
+        let image = document.createElement('img'); // Элемент для изображения
+    
+        name.textContent = boardData[i].name; // Добавляем имя
+        name.className = 'name'; // Класс для стилей имени
+    
+        // image.src = `/images/1_cell.jpg`; // Устанавливаем адрес изображения
+        // image.className = 'cell-image'; // Класс для стилей изображения
+    
+        // Устанавливаем цвет владельца, если поле не служебное
+        let ownerColor = getOwnerColor(boardData[i].owner);
+        if (ownerColor) {
+            cell.style.backgroundColor = ownerColor;
+        }
+        cell.setAttribute('data-position', Math.floor(i / 2));
+        cell.setAttribute('housesNum', houseNum);
+        if (i === 0 || i === 26) {
+            cell.className = "cell corner-cell";
+        } else {
+            cell.className = 'cell cell-h';
+            if (boardData[i].cost != -1) {
+                let formattedCost = formatCost(boardData[i].cost);
+                priceBar.textContent = formattedCost; // Устанавливаем текст цены
+                if (boardData[i].type.split('.')[0] === 'field') {
+                    priceBar.style.backgroundColor = parseColor(boardData[i].type); // Устанавливаем цвет фона для .price-bar
                 }
-            }
-            
-            cell.appendChild(name); // Добавляем имя в ячейку
-        
-            if (i === 0){
-                topLC.appendChild(cell);
-            } else if (i === 26){
-                topRC.appendChild(cell);
-            } else {
-                topRow.appendChild(cell);
+                priceBar.className = 'price-bar-common'; // Класс для стилей верхней полосы
+                cell.appendChild(priceBar); // Добавляем верхнюю полосу в ячейку
             }
         }
+    
+        cell.appendChild(image); // Добавляем изображение в ячейку
+        cell.appendChild(name); // Добавляем имя в ячейку
+    
+        if (i === 0) {
+            topLC.appendChild(cell);
+        } else if (i === 26) {
+            topRC.appendChild(cell);
+        } else {
+            topRow.appendChild(cell);
+        }
+    }
+    
 
 
         for (let i = 28; i <= 42; i+=2) {
@@ -433,6 +480,7 @@ async function createBoard() {
         return ws.send(JSON.stringify({type:'board_is_ready', gameId:gameId }))
     } else{
         for (let i = 0; i < 14; i+=1) {
+            const housesNum = boardData[i].houses;
             let cell = document.createElement('div');
             let priceBar = document.createElement('div'); // Элемент для верхней полосы с ценой
             let name = document.createElement('div'); // Элемент для имени
@@ -445,6 +493,7 @@ async function createBoard() {
                 cell.style.backgroundColor = ownerColor;
             }
             cell.setAttribute('data-position', i);
+            cell.setAttribute('housesNum', housesNum);
             if (i === 0 || i === 13) {
                 cell.className = "cell corner-cell";
             } else {
@@ -473,6 +522,8 @@ async function createBoard() {
 
 
         for (let i = 14; i <= 21; i+=1) {
+            const housesNum = boardData[i].houses
+            
             let cell = document.createElement('div');
             let priceBar = document.createElement('div'); // Элемент для верхней полосы с ценой
             let name = document.createElement('div'); // Элемент для имени
@@ -483,6 +534,7 @@ async function createBoard() {
             if (ownerColor) {
                 cell.style.backgroundColor = ownerColor;
             }
+            cell.setAttribute('housesNum', housesNum);
             cell.setAttribute('data-position', i);
         
             if (i === 21) {
@@ -536,6 +588,8 @@ async function createBoard() {
                     cell.appendChild(priceBar); // Добавляем верхнюю полосу в ячейку
                 }
             }
+            const housesNum = boardData[i].houses
+            cell.setAttribute('housesNum', housesNum);
             
             cell.appendChild(name); // Добавляем имя в ячейку
             
@@ -567,6 +621,8 @@ async function createBoard() {
                 priceBar.className = 'price-bar-left'; // Класс для стилей боковой полосы
                 cell.appendChild(priceBar); // Добавляем боковую полосу в ячейку
             }
+            const housesNum = boardData[i].houses
+            cell.setAttribute('housesNum', housesNum);
             
             cell.appendChild(name); // Добавляем имя в ячейку
             leftColumn.appendChild(cell);
@@ -578,6 +634,7 @@ async function createBoard() {
 }
 
 function updateCells(boardData, gameId){
+    console.log(boardData);
     boardData.forEach((cellData, index) => {
         const cellElement = document.querySelector(`.cell[data-position="${index}"], .cell-w[data-position="${index}"]`);
         if (cellElement) {
@@ -595,6 +652,8 @@ function updateCells(boardData, gameId){
             if (ownerColor) {
                 cellElement.style.backgroundColor = ownerColor;
             }
+            cellElement.setAttribute('housesnum', cellData.houses);
+
         }
     });
     loadAndDisplayPlayersInfo(gameId);
@@ -620,7 +679,7 @@ async function jumpJail(color){
 
     playersData.forEach(player =>{
         if (player.turn === 1){
-            displayRollDiceButton(player.turn);
+            displayRollDiceButton();
         }
     })
 }
@@ -634,11 +693,17 @@ async function afterBought(){
 
     playersData.forEach(player =>{
         if (player.turn === 1){
-            displayRollDiceButton(player.turn);
+            displayRollDiceButton();
         }
     })
-    
+}
 
+async function afterHouse(){
+    const gameId = getGameIdFromUrl();
+    const fullData = await getBoardData(gameId);
+    const boardData = fullData.board;
+    const playersData = fullData.players;
+    updateCells(boardData, gameId);  
 }
 
 
@@ -693,11 +758,10 @@ async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, 
     // Обработка специальных полей
     if (cellOwner != 'white' && cellOwner != 'None' && cellOwner != currentPlayerColor){
         ws.send(JSON.stringify({ type: 'PayMessage', gameId: gameId, position: pos, nickname: whoo, cellCost:cellCost, cellOwner:cellOwner, currentPlayerColor:currentPlayerColor}));
-        // displayPayButton(pos, cellName, cellCost, cellOwner, fieldType, whoo);
     }else if (['start', 'lottery', 'jail', 'delay', 'casino', 'back', 'tax'].includes(fieldType)) {
         playersData.forEach(player => {
             if (player.turn === 1) {
-                displayRollDiceButton(player.turn);
+                displayRollDiceButton();
             }
         });
     } else if (fieldType === "go_jail") {
@@ -708,7 +772,7 @@ async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, 
     } else {
         playersData.forEach(player => {
             if (player.turn === 1) {
-                displayRollDiceButton(player.turn);
+                displayRollDiceButton();
             }
         });
     }
@@ -749,23 +813,27 @@ async function displayPayButton(cellOwner, cellCost, whoo){
         buyBack.style.display = 'block';
         layButton.style.display = 'block';
         popupContainer.style.zIndex = 1000;
+    
+        // Удаляем предыдущий обработчик, если он был
         if (lastPayHandler) {
             payButton.removeEventListener('click', lastPayHandler);
         }
+    
+        // Новый обработчик для текущего вызова
         const handlePayButtonClick = function() {
             popupContainer.style.display = 'none';
             payButton.style.display = 'none';
             layButton.style.display = 'none';
             buyBack.style.display = 'none';
-            ws.send(JSON.stringify({type:'Payed', cellOwner: cellOwner, cellCost:cellCost, nickname: whoo, gameId:gameId }));
-            return; //----------------------------------------------------------------------------------------------------
+            ws.send(JSON.stringify({type: 'Payed', cellOwner: cellOwner, cellCost: cellCost, nickname: whoo, gameId: gameId }));
         };
         payButton.addEventListener('click', handlePayButtonClick);
-        lastBuyHandler = handlePayButtonClick;  // Сохраняем обработчик
-
+        lastPayHandler = handlePayButtonClick;  // Сохраняем обработчик
+    
     } else {
         popupContainer.style.display = 'none';
     }
+    
 }
 
 async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, whoo) {
@@ -1136,7 +1204,7 @@ function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
 }
-async function displayRollDiceButton(p_turn = '') {
+async function displayRollDiceButton(showBuild = -1) {
     try {
         const gameId = getGameIdFromUrl();
         const turn_info = await getCurrentPlayerInfo(gameId);
@@ -1149,11 +1217,15 @@ async function displayRollDiceButton(p_turn = '') {
         const popupContainer = document.getElementById('popupContainer');
         const rollDiceButton = document.getElementById('rollDiceButton');
         const buyBackButton = document.getElementById('buyBack');
+        const buildButton = document.getElementById('build');
 
         if (currentPlayerId === nickname) {
             popupContainer.style.display = 'block';
             rollDiceButton.style.display = 'flex';
             buyBackButton.style.display = 'flex';
+            if (showBuild === -1){
+                buildButton.style.display = 'flex';
+            }
             popupContainer.style.zIndex = 1000;
 
             // Удаляем предыдущий обработчик, если он был
@@ -1166,12 +1238,36 @@ async function displayRollDiceButton(p_turn = '') {
                 popupContainer.style.display = 'none';
                 rollDiceButton.style.display = 'none';
                 buyBackButton.style.display = 'none';
+                buildButton.style.display = 'none';
                 ws.send(JSON.stringify({ type: 'rollDice', gameId: gameId, color: currentColor, nickname: currentPlayerId }));
                 checkAllDice(currentColor, currentPlayerId);
             };
-
             rollDiceButton.addEventListener('click', handleRollDiceClick);
             lastRollDiceHandler = handleRollDiceClick;  // Сохраняем обработчик
+
+            const handleBuildClick = function() {
+                popupContainer.style.display = 'none';
+                rollDiceButton.style.display = 'none';
+                buyBackButton.style.display = 'none';
+                buildButton.style.display = 'none';
+                dimNonPlayerCellsForBuild(currentColor); // Затемняем ячейки, не принадлежащие текущему игроку
+
+                if (buildHandlers.length) {
+                    buildHandlers.forEach(({cell, handler}) => {
+                        cell.removeEventListener('click', handler);
+                    });
+                    buildHandlers = [];
+                }
+
+                const cells = document.querySelectorAll('.cell:not(.dimmed), .cell-w:not(.dimmed)');
+                cells.forEach(cell => {
+                    const handler = (event) => sendBuildMessage(event, nickname);
+                    cell.addEventListener('click', handler);
+                    buildHandlers.push({cell, handler});
+                });
+            };
+            buildButton.addEventListener('click', handleBuildClick);
+            lastBuildHandler = handleBuildClick;  // Сохраняем обработчик
         } else {
             popupContainer.style.display = 'none';
         }
@@ -1180,8 +1276,115 @@ async function displayRollDiceButton(p_turn = '') {
     }
 }
 
+function dimNonPlayerCellsForBuild(currentColor) {
+    const colors = {
+        'red': 'rgb(255, 0, 0)',
+        'yellow': 'rgb(255, 255, 0)',
+        'green': 'rgb(0, 128, 0)',
+        'blue' : "rgb(0, 0, 255)"
+    };
+    const cellsH = document.querySelectorAll('.cell');
+    const cellsW = document.querySelectorAll('.cell-w');
+    const cells = [...cellsH, ...cellsW]; // Объединяем результаты
+
+    cells.forEach(cell => {
+        const cellStyle = getComputedStyle(cell);
+        const ownerColor = cellStyle.backgroundColor; // Получаем цвет фона
+
+        const houses = parseInt(cell.getAttribute('housesnum'), 10);
+
+        if (ownerColor != colors[currentColor] || houses < 0 || houses > 4 || ownerColor === "rgb(79, 156, 147)") { // Сравниваем с цветом текущего игрока и проверяем количество домов
+            cell.classList.add('dimmed');
+        } else {
+            cell.classList.remove('dimmed');
+        }
+    });
+    displayCancelButton();
+}
+
+function sendBuildMessage(event, nickname){
+    if (buildHandlers.length) {
+        buildHandlers.forEach(({cell, handler}) => {
+            cell.removeEventListener('click', handler);
+        });
+        buildHandlers = [];
+    }
+
+    const gameId = getGameIdFromUrl();
+    const cell = event.currentTarget;
+    const position = cell.getAttribute('data-position');
+    const houseCount = parseInt(cell.getAttribute('housesnum'), 10);
+    const popupContainer = document.getElementById('popupContainer');
+    const cancelBuild = document.getElementById('buildcancel');
+    popupContainer.style.display = 'none';
+    cancelBuild.style.display = 'none';
+    showAllFields();
+    displayRollDiceButton(0);
+    // Отправляем запрос на сервер для постройки дома
+    ws.send(JSON.stringify({ type: 'buildHouse', gameId: gameId, position: position, houses: houseCount + 1, nickname: nickname }));
+    // Обновляем housesnum на клиенте
+    cell.setAttribute('housesnum', houseCount + 1);
+}
 
 
+function showAllFields(){
+    if (buildHandlers.length) {
+        buildHandlers.forEach(({cell, handler}) => {
+            cell.removeEventListener('click', handler);
+        });
+        buildHandlers = [];
+    }
+
+    const cellsH = document.querySelectorAll('.cell');
+    const cellsW = document.querySelectorAll('.cell-w');
+    const cells = [...cellsH, ...cellsW];
+    cells.forEach(cell =>{
+        cell.classList.remove('dimmed');
+    });
+}
+
+
+async function displayCancelButton(){
+
+    const gameId = getGameIdFromUrl();
+        const turn_info = await getCurrentPlayerInfo(gameId);
+        console.log("displayRollDiceButton, Ход:", turn_info );
+        const currentPlayerId = turn_info.currentPlayer;
+        const {currentColor} = turn_info;
+        const userData = await getUserData();
+        const {nickname} = userData;
+
+        const popupContainer = document.getElementById('popupContainer');
+        const cancelBuild = document.getElementById('buildcancel');
+
+
+        if (currentPlayerId === nickname) {
+            popupContainer.style.display = 'block';
+            cancelBuild.style.display = 'flex';
+            popupContainer.style.zIndex = 1000;
+
+            if (lastCancelBuildHandler) {
+                rollDiceButton.removeEventListener('click', lastCancelBuildHandler);
+            }
+
+            // Новый обработчик для текущего вызова
+            const handleCancelBuildClick = function() {
+                popupContainer.style.display = 'none';
+                cancelBuild.style.display = 'none';
+                if (buildHandlers.length) {
+                    buildHandlers.forEach(({cell, handler}) => {
+                        cell.removeEventListener('click', handler);
+                    });
+                    buildHandlers = [];
+                }
+
+                showAllFields();
+                displayRollDiceButton();
+            };
+            cancelBuild.addEventListener('click', handleCancelBuildClick);
+            lastCancelBuildHandler = handleCancelBuildClick;  // Сохраняем обработчик
+        }
+}
 
 
 
@@ -1235,7 +1438,7 @@ async function INFORMATION() {
                 try {
                     showTooltip(imageSrc, text);
                 } catch {
-                    const imageSrc = `/images/test_photo.jpg`; // Путь к изображению для данного поля
+                    const imageSrc = `/images/test_photo.jpg`; // Путь к дефолтному изображению 
                     showTooltip(imageSrc, text);
                 }
             });

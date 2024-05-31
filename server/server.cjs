@@ -75,6 +75,56 @@ function sendToGame(gameId, message) {
     });
 }
 
+function checkMonopoly(playerProperties, gameId, color, fieldType, position, nickname) {
+    return new Promise((resolve, reject) => {
+        console.log('Зашел в check monopoly', playerProperties, gameId, color, fieldType, position, nickname);
+
+        const query = "SELECT num FROM fields WHERE field_id = ?";
+        gamedb.query(query, [color], (error, results) => {
+            if (error) {
+                console.error("Ошибка при проверке монополии:", error);
+                return reject(false);
+            }
+
+            if (results.length > 0) {
+                const propertiesNeeded = results[0].num;
+                if (fieldType != "special") {
+                    const res = (playerProperties[color] === propertiesNeeded);
+                    if (res === true) {
+                        type = `${fieldType}.${color}`;
+                        const query = "UPDATE game_cells SET houses = 0 WHERE id = ? AND  type = ?";
+                        gamedb.query(query, [gameId, type], (error) => {
+                            if (error) {
+                                console.log("Ошибка при обновлении домов", error);
+                                return reject(false);
+                            } else {
+                                const query1 = `UPDATE state SET monopolies = CASE WHEN monopolies = '0' THEN ? ELSE CONCAT(monopolies, ', ', ?) END WHERE id = ? AND player_id = ?`;
+                                gamedb.query(query1, [color, color, gameId, nickname], (error) => {
+                                    if (error) {
+                                        console.log("Ошибка при обновлении монополий", error);
+                                        return reject(false);
+                                    } else {
+                                        return resolve(true);
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        console.log("Монополии нет", playerProperties[color], propertiesNeeded);
+                        return resolve(false);
+                    }
+                } else {
+                    return resolve(false);
+                }
+            } else {
+                return resolve(false);
+            }
+        });
+    });
+}
+
+
+
 
 
 app.use(bodyParser.json());
@@ -448,7 +498,7 @@ gamedb.query(updateTurnQuery, [nextPlayerColor, gameId], (error, results) => {
 }
 
 function updatePosition(dice1, dice2, gameId, nickname, nextPlayerColor, currentPlayerColor){
-    const diceTotal = dice1 + dice2;
+    const diceTotal = 2 - 1;
     const updatePositionQuery = `
         UPDATE state
         SET position = (position + ?) % 42
@@ -686,9 +736,10 @@ function s(){
                     } else {
                         if (message.length === 0){
                             const copyCellsQuery = `
-                                INSERT INTO game_cells (id, position, name, cost, data, discription, owner, houses, lay, type)
-                                SELECT ?,position, name, cost, data, disctiption, owner, houses,lay,type
-                                FROM board
+                            INSERT INTO game_cells (id, position, name, cost, data, discription, owner, houses, lay, type)
+                            SELECT ?,position, name, cost, data, disctiption, owner, houses,lay,type
+                            FROM board
+                            ORDER BY position
                             `;
                             gamedb.query(copyCellsQuery, [gameId], function(error,message) {
                                 if (error) {
@@ -834,6 +885,7 @@ function s(){
                 });
             } else if (message.type === "BuyField") {
                 const { position, nickname, gameId } = message;
+    
             
                 // Запрос для получения цвета игрока, баланса и свойств
                 const queryColorBalanceProperties = "SELECT color, balance, properties FROM state WHERE id = ? AND player_id = ?";
@@ -863,7 +915,7 @@ function s(){
             
                             // Проверка, достаточно ли у игрока денег
                             if (playerBalance >= cost) {
-                                const newCost = type === "field" ? data.h0 : 100000;
+                                const newCost = type === "field" ? data.h0 : 100000 * ((properties["special"] || 0) + 1);
                                 const updatePlayerBalance = "UPDATE state SET balance = balance - ? WHERE id = ? AND player_id = ?";
                                 const updateFieldOwnerCost = "UPDATE game_cells SET owner = ?, cost = ? WHERE position = ? AND id = ?";
             
@@ -888,8 +940,20 @@ function s(){
                                         } else if (type === "special") {
                                             properties["special"] = (properties["special"] || 0) + 1;
                                         }
-            
-                                        // Записываем обновленные свойства обратно в базу данных
+
+                                        checkMonopoly(properties, gameId, additionalInfo, type, position, nickname)
+                                            .then(has_monopoly => {
+                                                console.log(has_monopoly);
+                                                if (has_monopoly) {
+                                                    text = 'Приобрел монополию!';
+                                                    sendMessage(text, nickname, gameId);
+                                                } else {
+                                                    const a = 0;
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error("Ошибка при проверке монополии:", error);
+                                            });
                                         const updateProperties = "UPDATE state SET properties = ?, properties_cost = properties_cost + ? WHERE id = ? AND player_id = ?";
                                         gamedb.query(updateProperties, [JSON.stringify(properties), lay ,gameId, nickname], (error) => {
                                             if (error) {
@@ -996,11 +1060,11 @@ function s(){
                                 }
                                 const nicknameWhoOwns = result[0].player_id;
                                 const ubdateBalance = "UPDATE state SET balance = balance - ? WHERE id = ? AND player_id = ?";
-                                gamedb.query(ubdateBalance, [cellCost/2, gameId, nickname], (error) => {
+                                gamedb.query(ubdateBalance, [cellCost, gameId, nickname], (error) => {
                                     if (error){
                                         console.log("Ошибка Payed, 2", error);
                                     } else{
-                                        gamedb.query(ubdateBalance, [-cellCost/2, gameId, nicknameWhoOwns], (error) => {
+                                        gamedb.query(ubdateBalance, [-cellCost, gameId, nicknameWhoOwns], (error) => {
                                             if (error){
                                                 console.log("Ошибка Payed, 2", error);
                                             } else{
@@ -1022,8 +1086,64 @@ function s(){
                     }
                 });
 
+            } else if (message.type === "buildHouse"){
+                console.log(message);
+                const {gameId, position, houses, nickname} = message;
+                query = "SELECT * FROM game_cells WHERE id = ? AND position = ?";
+                gamedb.query(query, [gameId, position], (error, result) =>{
+                    if (error){
+                        console.log("ежик", error);
+                    }
+                    if (result.length > 0){
+                        const data = JSON.parse(result[0].data);
+                        const {cost} = result[0];
+
+                        const buildCost = data['build'];
+                        console.log(buildCost); 
+                        let newCost = cost;                   
+                        if (houses < 4){
+                            console.log(data);
+                            newCost = data[`h${houses}`];
+                        } else{
+                            newCost = data[`hotel`];;
+                        }
+
+                        const queryColorBalanceProperties = "SELECT color, balance, properties FROM state WHERE id = ? AND player_id = ?";
+                        gamedb.query(queryColorBalanceProperties, [gameId, nickname], (error, results) => {
+                            if (error) {
+                                console.error('Ошибка при извлечении цвета, баланса и свойств:', error);
+                                return;
+                            }
+                            if (results.length > 0) {
+                                const playerColor = results[0].color;
+                                const playerBalance = results[0].balance;
+                                if (playerBalance >= buildCost){
+                                    queryCost = "UPDATE game_cells SET cost = ?, houses = houses + 1 WHERE id = ? AND position = ?";
+                                    gamedb.query(queryCost, [newCost, gameId, position], (error, result) =>{
+                                        if (error){
+                                            console.log('медведь', error);
+                                        }
+                                        const updateBalance = "UPDATE state SET balance = balance - ? WHERE id = ? AND player_id = ?";
+                                        gamedb.query(updateBalance, [buildCost, gameId, nickname], (error)=>{
+                                            if (error){
+                                                console.log('звяц', error);
+                                            }
+                                            GamesWithPlayers[gameId].forEach(playerNickname => {
+                                                if (ClientConnections[playerNickname]) {
+                                                    ClientConnections[playerNickname].send(JSON.stringify({ 
+                                                        type: 'House'
+                                                    }));
+                                                }
+                                            });
+                                            
+                                        });
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
             }
-            
         });
 
 
