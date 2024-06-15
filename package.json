@@ -1,4 +1,11 @@
 {
+    "name": "HSE_Monopoly",
+    "version": "1.0.0",
+    "scripts": {
+      "start": "node server/server.cjs",
+      "install-client": "cd client && npm install",
+      "build-client": "cd client && npm run build"
+    },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "express": "^4.19.2",
