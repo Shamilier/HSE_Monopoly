@@ -10,15 +10,6 @@ const fs = require('fs');
 const https = require('https');
 require('dotenv').config();
 
-// Настройка подключения к базе данных
-// const  db = mysql.createPool({
-//     host: process.env.MYSQLHOST,
-//     user: process.env.MYSQLUSER,
-//     password: process.env.MYSQLPASSWORD,
-//     database: process.env.MYSQLDATABASE,
-//     port: process.env.MYSQLPORT
-// });
-
 const gamedb = mysql.createPool({
     host: process.env.MYSQLHOST,
     user: process.env.MYSQLUSER,
@@ -382,9 +373,6 @@ app.get('/api/game/:gameId/currentTurn', (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-
-
-
 
 // ----------------------------------------------------------------------
 // WebSocket сервер на том же порту, что и Express
