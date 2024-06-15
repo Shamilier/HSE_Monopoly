@@ -6,6 +6,8 @@ const path = require('path');
 const { Server } = require("ws");
 const { v4: uuid } = require("uuid");
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const https = require('https');
 require('dotenv').config();
 
 // Настройка подключения к базе данных
