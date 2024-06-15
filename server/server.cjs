@@ -27,6 +27,7 @@ const gamedb = mysql.createPool({
 
 // Настройка Express
 const app = express();
+console.log(app);
 const PORT = process.env.PORT || 3000;
 
 
@@ -129,7 +130,7 @@ function checkMonopoly(playerProperties, gameId, color, fieldType, position, nic
 
 
 app.use(bodyParser.json());
-app.use(express.static('client')); // Предполагается, что ваши статические файлы находятся в папке 'client'
+app.use(express.static('client')); 
 app.use(session({
     secret: 'your_secret_key',
     resave: false,
