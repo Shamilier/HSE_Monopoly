@@ -9,11 +9,12 @@ let lastRollDiceHandler = null;
 let lastBuyHandler = null;
 let lastCancelHandler = null;
 let lastPayHandler = null;
-let lastLayHandler = null;
-let lastBuyBackHandler = null;
 let lastBuildHandler = null;
+let lastLayHandler = null;
 let lastCancelBuildHandler = null;
 let buildHandlers = [];
+let layHandlers = [];
+let COLORS = ['red', 'blue'];
 s();
 // ---------------------------------------
 
@@ -171,7 +172,13 @@ function s(){
                 updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, oldPosition, currentPlayerColor);
                 break;
             case 'fieldBought':
-                afterBought()
+                afterBought();
+                break;
+            case 'fieldLayed':
+                const cell_owner = message.cellOwner;
+                const cell_cost = message.cellCost;
+                const {prev_buttons} = message;
+                afterLay(cell_owner, cell_cost, prev_buttons);
                 break;
             case 'jumpJail':
                 const {color} = message;
@@ -182,12 +189,16 @@ function s(){
                 const cellOwnerPay = message.cellOwner;
                 const cellCostPay = message.cellCost;
                 const {nickname} = message;
-                console.log(nickname);
                 displayPayButton(cellOwnerPay, cellCostPay, nickname);
                 break;
             case 'House':
                 afterHouse();
                 break;
+            case 'displayBuyButtonAgain':
+                const {position} = message;
+                const displayToNikname = message.nickname;
+                displayBuyButton(position, -1, -1, -1, -1, displayToNikname);
+                break
             default:
                 console.error(`Неизвестный тип сообщения: ${message.type}`);
         }
@@ -343,7 +354,7 @@ async function createBoard() {
         // image.src = `/images/1_cell.jpg`; // Устанавливаем адрес изображения
         // image.className = 'cell-image'; // Класс для стилей изображения
     
-        // Устанавливаем цвет владельца, если поле не служебное
+        // Устанавливаем цвет владельца, если поле не слу  mdmdmжебное
         let ownerColor = getOwnerColor(boardData[i].owner);
         if (ownerColor) {
             cell.style.backgroundColor = ownerColor;
@@ -640,7 +651,6 @@ function updateCells(boardData, gameId){
         if (cellElement) {
             const nameElement = cellElement.querySelector('.name');
             const priceBar = cellElement.querySelector('.price-bar-common, .price-bar-right, .price-bar-left');
-
             if (nameElement) {
                 nameElement.textContent = cellData.name;
             }
@@ -653,7 +663,6 @@ function updateCells(boardData, gameId){
                 cellElement.style.backgroundColor = ownerColor;
             }
             cellElement.setAttribute('housesnum', cellData.houses);
-
         }
     });
     loadAndDisplayPlayersInfo(gameId);
@@ -679,6 +688,27 @@ async function jumpJail(color){
 
     playersData.forEach(player =>{
         if (player.turn === 1){
+            displayRollDiceButton();
+        }
+    })
+}
+
+
+async function afterLay(cell_owner, cell_cost, prev_buttons){
+    const gameId = getGameIdFromUrl();
+    const fullData = await getBoardData(gameId);
+    const boardData = fullData.board;
+    const playersData = fullData.players;
+    updateCells(boardData, gameId);     // Обновление свойств ячеек
+
+    playersData.forEach(player =>{
+        console.log(player);
+        if (player.curr_status === "BuyField"){
+            displayBuyButton(player.position, -1, -1, -1, -1, player.player_id);
+        } else if (player.curr_status === "PayFee"){
+            displayPayButton(cell_owner, cell_cost, player.player_id);
+        }
+        else {
             displayRollDiceButton();
         }
     })
@@ -758,7 +788,7 @@ async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, 
     // Обработка специальных полей
     if (cellOwner != 'white' && cellOwner != 'None' && cellOwner != currentPlayerColor){
         ws.send(JSON.stringify({ type: 'PayMessage', gameId: gameId, position: pos, nickname: whoo, cellCost:cellCost, cellOwner:cellOwner, currentPlayerColor:currentPlayerColor}));
-    }else if (['start', 'lottery', 'jail', 'delay', 'casino', 'back', 'tax'].includes(fieldType)) {
+    }else if (['start', 'lottery', 'jail', 'delay', 'casino', 'back',].includes(fieldType)) {
         playersData.forEach(player => {
             if (player.turn === 1) {
                 displayRollDiceButton();
@@ -766,9 +796,11 @@ async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, 
         });
     } else if (fieldType === "go_jail") {
         ws.send(JSON.stringify({ type: 'jail!', gameId: gameId, position: pos, nickname: whoo }));
-    } else if ((cellOwner === "white") || (cellOwner === "None")) {
+    } else if ((cellOwner === "white")) {
         // Отображение кнопки покупки
         displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, whoo);
+    } else if (fieldType === "tax"){
+        displayPayButton(cellOwner, cellCost, whoo, "tax")
     } else {
         playersData.forEach(player => {
             if (player.turn === 1) {
@@ -794,101 +826,189 @@ async function getCurrentPlayerInfo(gameId) {
     }
 }
 
-async function displayPayButton(cellOwner, cellCost, whoo){
+async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
+    if( type === "fee"){
+        const prev_buttons = "PayFee";
     // console.log(whoo);
-    const gameId = getGameIdFromUrl();
-    const turn_info = await getCurrentPlayerInfo(gameId);
-    const currentPlayerId = turn_info.currentPlayer;
-    const currentColor = turn_info.currentColor;
-    const userData = await getUserData();
-    const {nickname} = userData;
+        const gameId = getGameIdFromUrl();
+        const turn_info = await getCurrentPlayerInfo(gameId);
+        const currentPlayerId = turn_info.currentPlayer;
+        const currentColor = turn_info.currentColor;
+        const userData = await getUserData();
+        const {nickname} = userData;
 
-    const popupContainer = document.getElementById('popupContainer');
-    const payButton = document.getElementById('pay');
-    const buyBack = document.getElementById('buyBack');
-    const layButton = document.getElementById('lay');
-    if (whoo === nickname) {  
-        popupContainer.style.display = 'block';
-        payButton.style.display = 'block';
-        buyBack.style.display = 'block';
-        layButton.style.display = 'block';
-        popupContainer.style.zIndex = 1000;
-    
-        // Удаляем предыдущий обработчик, если он был
-        if (lastPayHandler) {
-            payButton.removeEventListener('click', lastPayHandler);
-        }
-    
-        // Новый обработчик для текущего вызова
-        const handlePayButtonClick = function() {
+        const popupContainer = document.getElementById('popupContainer');
+        const payButton = document.getElementById('pay');
+        const layButton = document.getElementById('lay');
+        if (whoo === nickname) {  
+            popupContainer.style.display = 'flex';
+            payButton.style.display = 'inline-block';
+            layButton.style.display = 'inline-block';
+            popupContainer.style.zIndex = 1000;
+        
+
+            // Удаляем предыдущий обработчик, если он был
+            if (lastPayHandler) {
+                payButton.removeEventListener('click', lastPayHandler);
+            }
+            const handlePayButtonClick = function() {
+                popupContainer.style.display = 'none';
+                payButton.style.display = 'none';
+                layButton.style.display = 'none';
+                ws.send(JSON.stringify({type: 'Payed', cellOwner: cellOwner, cellCost: cellCost, nickname: whoo, gameId: gameId }));
+            };
+            payButton.addEventListener('click', handlePayButtonClick);
+            lastPayHandler = handlePayButtonClick;  // Сохраняем обработчик
+
+
+
+            const handleLayClick = function() {
+                popupContainer.style.display = 'none';
+                payButton.style.display = 'none';
+                layButton.style.display = 'none';
+                dimNonPlayerCellsForLay(COLORS[(COLORS.indexOf(currentColor) - 1 + COLORS.length) % COLORS.length], prev_buttons, cellOwner, cellCost, whoo, -1); // Затемняем ячейки, не принадлежащие текущему игроку
+
+                if (layHandlers.length) {
+                    layHandlers.forEach(({cell, handler}) => {
+                        cell.removeEventListener('click', handler);
+                    });
+                    layHandlers = [];
+                }
+
+                const cells = document.querySelectorAll('.cell:not(.dimmed), .cell-w:not(.dimmed)');
+                cells.forEach(cell => {
+                    const prev_buttons = 'PayFee';
+                    const handler = (event) => sendLayMessage(event, whoo, prev_buttons);
+                    cell.addEventListener('click', handler);
+                    layHandlers.push({cell, handler});
+                });
+            };
+            layButton.addEventListener('click', handleLayClick);
+            lastLayHandler = handleLayClick;  // Сохраняем обработчик
+        
+            
+        } else {
             popupContainer.style.display = 'none';
-            payButton.style.display = 'none';
-            layButton.style.display = 'none';
-            buyBack.style.display = 'none';
-            ws.send(JSON.stringify({type: 'Payed', cellOwner: cellOwner, cellCost: cellCost, nickname: whoo, gameId: gameId }));
-        };
-        payButton.addEventListener('click', handlePayButtonClick);
-        lastPayHandler = handlePayButtonClick;  // Сохраняем обработчик
-    
-    } else {
-        popupContainer.style.display = 'none';
+        }
+
+
+    } else if (type === 'tax'){
+        const gameId = getGameIdFromUrl();
+        const turn_info = await getCurrentPlayerInfo(gameId);
+        const currentPlayerId = turn_info.currentPlayer;
+        const currentColor = turn_info.currentColor;
+        const userData = await getUserData();
+        const {nickname} = userData;
+
+        const popupContainer = document.getElementById('popupContainer');
+        const payButton = document.getElementById('pay');
+        const layButton = document.getElementById('lay');
+        if (whoo === nickname) {  
+            popupContainer.style.display = 'flex';
+            payButton.style.display = 'inline-block';
+            layButton.style.display = 'inline-block';
+            popupContainer.style.zIndex = 1001;
+            if (lastPayHandler) {
+                payButton.removeEventListener('click', lastPayHandler);
+            }
+            const handlePayButtonClick = function() {
+                popupContainer.style.display = 'none';
+                payButton.style.display = 'none';
+                layButton.style.display = 'none';
+                sendMessage("Попал на поле налог и должен заплатить 18% своих средств");
+                ws.send(JSON.stringify({type: 'TaxPay', cellOwner: cellOwner, cellCost: cellCost, nickname: whoo, gameId: gameId }));
+            };
+            payButton.addEventListener('click', handlePayButtonClick);
+            lastPayHandler = handlePayButtonClick;  // Сохраняем обработчик
+        
+        } else {
+            popupContainer.style.display = 'none';
+        }
     }
     
 }
 
 async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, whoo) {
     try {
+        const prev_buttons = 'BuyField';
         const gameId = getGameIdFromUrl();
         const turn_info = await getCurrentPlayerInfo(gameId);
         const currentPlayerId = turn_info.currentPlayer;
         const currentColor = turn_info.currentColor;
         const userData = await getUserData();
+        console.log("_~_~_~_~_~ ", userData, whoo);
         const nickname = userData.nickname;
 
         const popupContainer = document.getElementById('popupContainer');
         const buyButton = document.getElementById('buy');
         const cancelButton = document.getElementById('cancel');
-        const buyBack = document.getElementById('buyBack');
+        const layButton = document.getElementById('lay');
 
         if (whoo === nickname) {   
-            popupContainer.style.display = 'block';
-            buyButton.style.display = 'block';
-            cancelButton.style.display = 'block';
-            buyBack.style.display = 'block';
+            popupContainer.style.display = 'flex';
+            buyButton.style.display = 'inline-block';
+            cancelButton.style.display = 'inline-block';
+            layButton.style.display = "inline-block"
             popupContainer.style.zIndex = 1000;
+
+
+            // Удаляем предыдущий обработчик отказа, если он был
             if (lastCancelHandler) {
                 cancelButton.removeEventListener('click', lastCancelHandler);
             }
-            
             const handleCancelButtonClick = function() {
                 popupContainer.style.display = 'none';
                 buyButton.style.display = 'none';
                 cancelButton.style.display = 'none';
-                buyBack.style.display = 'none';
+                layButton.style = 'none';
                 ws.send(JSON.stringify({type:'board_is_ready', gameId:gameId}));
                 return; //----------------------------------------------------------------------------------------------------
             };
-            
-            // Добавляем новый обработчик для кнопки "отказ"
             cancelButton.addEventListener('click', handleCancelButtonClick);
             lastCancelHandler = handleCancelButtonClick;
 
-            // Удаляем предыдущий обработчик, если он был
+
+            // Удаляем предыдущий обработчик покупки, если он был
             if (lastBuyHandler) {
                 buyButton.removeEventListener('click', lastBuyHandler);
             }
-
-            // при нажатии кнопки купить
             const handleBuyButtonClick = function() {
                 popupContainer.style.display = 'none';
                 buyButton.style.display = 'none';
                 cancelButton.style.display = 'none';
-                buyBack.style.display = 'none';
+                layButton.style = 'none';
                 ws.send(JSON.stringify({ type: 'BuyField', gameId: gameId, position: pos, nickname: whoo }));
             };
-
             buyButton.addEventListener('click', handleBuyButtonClick);
-            lastBuyHandler = handleBuyButtonClick;  // Сохраняем обработчик
+            lastBuyHandler = handleBuyButtonClick;  
+
+
+            // Удаляем предыдущий обработчик продажи, если он был
+            const handleLayClick = function() {
+                popupContainer.style.display = 'none';
+                buyButton.style.display = 'none';
+                cancelButton.style.display = 'none';
+                layButton.style = 'none';
+                dimNonPlayerCellsForLay(COLORS[(COLORS.indexOf(currentColor) - 1 + COLORS.length) % COLORS.length], prev_buttons, -1, -1, whoo, pos); // Затемняем ячейки, не принадлежащие текущему игроку
+
+                if (layHandlers.length) {
+                    layHandlers.forEach(({cell, handler}) => {
+                        cell.removeEventListener('click', handler);
+                    });
+                    layHandlers = [];
+                }
+
+                const cells = document.querySelectorAll('.cell:not(.dimmed), .cell-w:not(.dimmed)');
+                cells.forEach(cell => {
+                    const handler = (event) => sendLayMessage(event, whoo, prev_buttons);
+                    cell.addEventListener('click', handler);
+                    layHandlers.push({cell, handler});
+                });
+            };
+            layButton.addEventListener('click', handleLayClick);
+            lastLayHandler = handleLayClick;  // Сохраняем обработчик
+
+
         } else {
             popupContainer.style.display = 'none';
         }
@@ -1216,15 +1336,13 @@ async function displayRollDiceButton(showBuild = -1) {
 
         const popupContainer = document.getElementById('popupContainer');
         const rollDiceButton = document.getElementById('rollDiceButton');
-        const buyBackButton = document.getElementById('buyBack');
         const buildButton = document.getElementById('build');
 
         if (currentPlayerId === nickname) {
-            popupContainer.style.display = 'block';
-            rollDiceButton.style.display = 'flex';
-            buyBackButton.style.display = 'flex';
+            popupContainer.style.display = 'flex';
+            rollDiceButton.style.display = 'inline-block';
             if (showBuild === -1){
-                buildButton.style.display = 'flex';
+                buildButton.style.display = 'inline-block';
             }
             popupContainer.style.zIndex = 1000;
 
@@ -1237,7 +1355,6 @@ async function displayRollDiceButton(showBuild = -1) {
             const handleRollDiceClick = function() {
                 popupContainer.style.display = 'none';
                 rollDiceButton.style.display = 'none';
-                buyBackButton.style.display = 'none';
                 buildButton.style.display = 'none';
                 ws.send(JSON.stringify({ type: 'rollDice', gameId: gameId, color: currentColor, nickname: currentPlayerId }));
                 checkAllDice(currentColor, currentPlayerId);
@@ -1248,7 +1365,6 @@ async function displayRollDiceButton(showBuild = -1) {
             const handleBuildClick = function() {
                 popupContainer.style.display = 'none';
                 rollDiceButton.style.display = 'none';
-                buyBackButton.style.display = 'none';
                 buildButton.style.display = 'none';
                 dimNonPlayerCellsForBuild(currentColor); // Затемняем ячейки, не принадлежащие текущему игроку
 
@@ -1299,7 +1415,33 @@ function dimNonPlayerCellsForBuild(currentColor) {
             cell.classList.remove('dimmed');
         }
     });
-    displayCancelButton();
+    displayCancelButton("RollDice");
+}
+
+function dimNonPlayerCellsForLay(currentColor, prev_buttons, cellOwner = -1, cellCost = -1, whoo = -1, pos = -1) {
+    const colors = {
+        'red': 'rgb(255, 0, 0)',
+        'yellow': 'rgb(255, 255, 0)',
+        'green': 'rgb(0, 128, 0)',
+        'blue' : "rgb(0, 0, 255)"
+    };
+    const cellsH = document.querySelectorAll('.cell');
+    const cellsW = document.querySelectorAll('.cell-w');
+    const cells = [...cellsH, ...cellsW]; // Объединяем результаты
+
+    cells.forEach(cell => {
+        const cellStyle = getComputedStyle(cell);
+        const ownerColor = cellStyle.backgroundColor; // Получаем цвет фона
+
+        const houses = parseInt(cell.getAttribute('housesnum'), 10);
+
+        if (ownerColor != colors[currentColor]  || ownerColor === "rgb(79, 156, 147)") { // Сравниваем с цветом текущего игрока и проверяем количество домов
+            cell.classList.add('dimmed');
+        } else {
+            cell.classList.remove('dimmed');
+        }
+    });
+    displayCancelButton("PayFee", cellOwner, cellCost, whoo, pos);
 }
 
 function sendBuildMessage(event, nickname){
@@ -1326,6 +1468,28 @@ function sendBuildMessage(event, nickname){
     cell.setAttribute('housesnum', houseCount + 1);
 }
 
+function sendLayMessage(event, nickname, prev_buttons){
+    if (layHandlers.length) {
+        layHandlers.forEach(({cell, handler}) => {
+            cell.removeEventListener('click', handler);
+        });
+        layHandlers = [];
+    }
+
+    const gameId = getGameIdFromUrl();
+    const cell = event.currentTarget;
+    const position = cell.getAttribute('data-position');
+    const houseCount = parseInt(cell.getAttribute('housesnum'), 10);
+    const popupContainer = document.getElementById('popupContainer');
+    const cancelBuild = document.getElementById('buildcancel');
+    popupContainer.style.display = 'none';
+    cancelBuild.style.display = 'none';
+    showAllFieldsForLay();
+    ws.send(JSON.stringify({ type: 'layField', gameId: gameId, position: position, houses: houseCount, nickname: nickname, prev_buttons: prev_buttons}));
+}
+
+
+
 
 function showAllFields(){
     if (buildHandlers.length) {
@@ -1343,12 +1507,26 @@ function showAllFields(){
     });
 }
 
+function showAllFieldsForLay(){
+    if (layHandlers.length) {
+        layHandlers.forEach(({cell, handler}) => {
+            cell.removeEventListener('click', handler);
+        });
+        layHandlers = [];
+    }
 
-async function displayCancelButton(){
+    const cellsH = document.querySelectorAll('.cell');
+    const cellsW = document.querySelectorAll('.cell-w');
+    const cells = [...cellsH, ...cellsW];
+    cells.forEach(cell =>{
+        cell.classList.remove('dimmed');
+    });
+}
+
+async function displayCancelButton(prev_buttons, cellOwner, cellCost, whoo, pos){
 
     const gameId = getGameIdFromUrl();
         const turn_info = await getCurrentPlayerInfo(gameId);
-        console.log("displayRollDiceButton, Ход:", turn_info );
         const currentPlayerId = turn_info.currentPlayer;
         const {currentColor} = turn_info;
         const userData = await getUserData();
@@ -1359,8 +1537,8 @@ async function displayCancelButton(){
 
 
         if (currentPlayerId === nickname) {
-            popupContainer.style.display = 'block';
-            cancelBuild.style.display = 'flex';
+            popupContainer.style.display = 'flex';
+            cancelBuild.style.display = 'inline-block';
             popupContainer.style.zIndex = 1000;
 
             if (lastCancelBuildHandler) {
@@ -1379,7 +1557,13 @@ async function displayCancelButton(){
                 }
 
                 showAllFields();
-                displayRollDiceButton();
+                if (prev_buttons === "RollDice"){
+                    displayRollDiceButton();
+                } else if (prev_buttons === "PayFee"){
+                    displayPayButton(cellOwner, cellCost, whoo);
+                } else if(prev_buttons === "BuyField"){
+                    displayBuyButton(pos, -1, -1, -1, -1, whoo);
+                }
             };
             cancelBuild.addEventListener('click', handleCancelBuildClick);
             lastCancelBuildHandler = handleCancelBuildClick;  // Сохраняем обработчик
