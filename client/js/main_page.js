@@ -47,7 +47,7 @@ function viewPhoto() {
 
 // ------------------------------------
 
-const PORT = process.env.PORT || 3000; 
+const PORT = 3306; 
 const ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
 const userData = await getUserData();
 s();
