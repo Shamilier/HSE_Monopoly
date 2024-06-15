@@ -27,7 +27,6 @@ const gamedb = mysql.createPool({
 
 // Настройка Express
 const app = express();
-console.log(app);
 const PORT = process.env.PORT || 3000;
 app.use((req, res, next) => {
     if (req.headers['x-forwarded-proto'] !== 'https') {
