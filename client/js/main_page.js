@@ -48,7 +48,7 @@ function viewPhoto() {
 // ------------------------------------
 
 const PORT = 3306; 
-const ws = new WebSocket(`ws://127.0.0.1:${PORT}`);
+const ws = new WebSocket(`ws://myapp.railway.app`);
 const userData = await getUserData();
 s();
 function s(){
