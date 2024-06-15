@@ -2,19 +2,20 @@
     "name": "HSE_Monopoly",
     "version": "1.0.0",
     "scripts": {
-      "start": "node server/server.cjs",
-      "install-client": "cd client && npm install",
-      "build-client": "cd client && npm run build"
+        "start": "node server/server.cjs",
+        "install-client": "cd client && npm install",
+        "build-client": "cd client && npm run build"
     },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "express": "^4.19.2",
-    "express-session": "^1.18.0",
-    "mysql": "^2.18.1",
-    "mysql2": "^3.10.1",
-    "mysqli": "^3.1.4",
-    "path": "^0.12.7",
-    "pg": "^8.12.0",
-    "uuid": "^9.0.1"
-  }
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "express": "^4.19.2",
+        "express-session": "^1.18.0",
+        "mysql": "^2.18.1",
+        "mysql2": "^3.10.1",
+        "mysqli": "^3.1.4",
+        "path": "^0.12.7",
+        "pg": "^8.12.0",
+        "uuid": "^9.0.1",
+        "ws": "^8.17.0"
+    }
 }
