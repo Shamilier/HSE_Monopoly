@@ -1,4 +1,4 @@
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
@@ -9,13 +9,13 @@ const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 // Настройка подключения к базе данных
-const db = mysql.createPool({
-    host: process.env.MYSQLHOST,
-    user: process.env.MYSQLUSER,
-    password: process.env.MYSQLPASSWORD,
-    database: process.env.MYSQLDATABASE,
-    port: process.env.MYSQLPORT
-});
+// const  db = mysql.createPool({
+//     host: process.env.MYSQLHOST,
+//     user: process.env.MYSQLUSER,
+//     password: process.env.MYSQLPASSWORD,
+//     database: process.env.MYSQLDATABASE,
+//     port: process.env.MYSQLPORT
+// });
 
 const gamedb = mysql.createPool({
     host: process.env.MYSQLHOST,
@@ -161,7 +161,7 @@ app.post('/register', async (req, res) => {
 
         // Проверяем, существует ли уже пользователь с таким email
         const userExists = await new Promise((resolve, reject) => {
-            db.query('SELECT * FROM users WHERE nickname = ? OR email = ?', [nickname, email], (error, results) => {
+             gamedb.query('SELECT * FROM users WHERE nickname = ? OR email = ?', [nickname, email], (error, results) => {
                 if (error) {
                     reject(error);
                 } else {
@@ -175,7 +175,7 @@ app.post('/register', async (req, res) => {
         } else {
             // Регистрируем нового пользователя
             await new Promise((resolve, reject) => {
-                db.query('INSERT INTO users (email, nickname, password) VALUES (?, ?, ?)', [email, nickname, hashedPassword], (error, results) => {
+                 gamedb.query('INSERT INTO users (email, nickname, password) VALUES (?, ?, ?)', [email, nickname, hashedPassword], (error, results) => {
                     if (error) {
                         reject(error);
                     } else {
@@ -197,7 +197,7 @@ app.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     // Запрос к базе данных для поиска пользователя по email
-    db.query('SELECT * FROM users WHERE email = ?', [email], async (error, results) => {
+     gamedb.query('SELECT * FROM users WHERE email = ?', [email], async (error, results) => {
         if (error) {
             console.error('Ошибка при выполнении запроса к базе данных:', error);
             return res.status(500).send('Internal Server Error');
