@@ -1,5 +1,4 @@
 const mysql = require('mysql');
-// const mysql = require('mysql2/promise');
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
@@ -7,26 +6,28 @@ const path = require('path');
 const { Server } = require("ws");
 const { v4: uuid } = require("uuid");
 const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
 // Настройка подключения к базе данных
 const db = mysql.createPool({
-    host: "localhost",
-    user: "root",
-    password: "root",
-    database: "monopoly_reg"
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: process.env.MYSQLPORT
 });
 
 const gamedb = mysql.createPool({
-    host: "localhost",
-    user: "root",
-    password: "root",
-    database: "games"
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: process.env.MYSQLPORT
 });
 
 // Настройка Express
 const app = express();
-const PORT = 3000;
-
+const PORT = process.env.PORT || 3000;
 
 
 function generateRandomDiceValues() {
