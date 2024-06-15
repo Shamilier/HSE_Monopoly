@@ -157,8 +157,7 @@ app.post('/register', async (req, res) => {
         }
 
         // Хешируем пароль
-        const hashedPassword = await bcrypt.hash(password, 10);
-
+        const hashedPassword = password;
         // Проверяем, существует ли уже пользователь с таким email
         const userExists = await new Promise((resolve, reject) => {
              gamedb.query('SELECT * FROM users WHERE nickname = ? OR email = ?', [nickname, email], (error, results) => {
@@ -206,9 +205,8 @@ app.post('/login', async (req, res) => {
         if (results.length > 0) {
             // Пользователь найден, сравниваем пароли
             const user = results[0];
-            const match = await bcrypt.compare(password, user.password);
 
-            if (match) {
+            if (password === user.password) {
                 // Пароли совпадают, установка сессии
                 req.session.user = { id: user.id, nickname: user.nickname, currentGame : -1};
                 res.redirect('/main_page.html'); // Или другая страница, на которую нужно перенаправить пользователя
