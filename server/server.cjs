@@ -610,7 +610,7 @@ function s(){
     // ---
 
             else if (type === 'createGame') {
-                const { type, password, players_count, map, bet, nickname} = message;
+                const { type, players_count, bet, nickname} = message;
                 let status = -1; 
                 // Статус игры == -1 значит игра еще не началась
 
@@ -627,7 +627,7 @@ function s(){
                 }
 
 
-                gamedb.query(query, [currGameId, password, players_count, map, bet, players_id, status], (error, results) => {
+                gamedb.query(query, [currGameId, -1, players_count, -1, bet, players_id, status], (error, results) => {
                     if (error) {
                         console.error('Ошибка добавления в базу данных:', error);
                         return ws.send(JSON.stringify({ type: 'error', message: 'Ошибка добавления в базу данных.' }));

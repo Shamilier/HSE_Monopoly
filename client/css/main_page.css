@@ -1,202 +1,274 @@
-body{
-    background-color: #1a1a2e;
-    letter-spacing: 1px;
-    font-family: "poppins";
-}
-/* ЗАГОЛОВОК */
-.header{
-        font-family: "poppins";
+:root {
+        --background: #1a1a2e;
+        --color: #ffffff;
+        --primary-color: #0f3460;
+    }
+    
+    * {
+        box-sizing: border-box;
+    }
+    
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    body {
+        margin: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+        background: var(--background);
+        color: var(--color);
+        letter-spacing: 1px;
+        transition: background 0.2s ease;
+    }
+    
+    a {
+        text-decoration: none;
+        color: var(--color);
+    }
+    
+    h1 {
+        font-size: 2rem;
+        position: relative;
+    }
+    
+    .header {
         display: flex;
         justify-content: space-between;
-        background-color: #1a1a2e;
-        padding-bottom: 20px;
-        border: 1px;
-}
-.left-menu {
-        font-family: "poppins";
-        margin-top: 20px;
-        margin-left: 20px;
-        text-align: left;
-        display: inline-block;
-
-}
-.left-menu>button{
-        font-family: "poppins";
-        height:50px;
-        width:50px;
-}
-
-.center-menu{
-        font-family: "poppins";
-        display: inline-block;
-        text-align: center;
-        margin-top: 10px;
-}
-
-.right-menu{
-        font-family: "poppins";
-        margin-top: 20px;
-        margin-right: 20px;
-        display: inline-block;
-}
-
-.hello{
-        font-family: "poppins";
-        display: inline;
-        color: rgb(255, 255, 255);
-        font-size: 55px;
-}
-.header-button{
-        margin-top: -10px;
-        margin: 3px;
-}
-.gg-profile {
-        margin: 3px;
-        font-size: 50px; /* или используйте большее значение для увеличения размера */
-}
-
-/* ОСНОВНАЯ ЧАСТЬ */
-
-.main-block{
-        margin-top: 20px;
-}
-
-/*  ЛЕВАЯ ПАНЕЛЬ*/
-
-.raiting{
-        display: inline;
-        margin-top: -15px;
-        float: left;
-        width: 30%;
-        height: 280px;
-        border-right: solid;
-        border-color: chocolate;
-}
-.raiting-header{
-        text-align: center;
-}
-.raiting-header>h3{
-        font-size:x-large;
-        display: inline;
-        color: rgb(255, 255, 255);
-}
-
-.paste-button {
-        margin-left: 5px;
-        position: relative;
-        display: inline;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.button {
-        background-color: #ffffff;
-        color: #212121;
-        padding: 8px 10px;
-        font-size: 15px;
-        font-weight: bold;
-        border: 2px solid transparent;
-        border-radius: 15px;
+        align-items: center;
+        background-color: var(--primary-color);
+        padding: 10px 20px;
+    }
+    
+    .left-menu, .right-menu {
+        display: flex;
+        align-items: center;
+    }
+    
+    .settings-btn {
+        background: none;
+        border: none;
+        color: var(--color);
+        font-size: 20px;
         cursor: pointer;
-}
-.dropdown-content {
-        display: none;
-        font-size: 13px;
-        position: absolute;
-        z-index: 1;
-        min-width: 200px;
-        background-color: #212121;
-        border: 2px solid #ffffff;
-        border-radius: 0px 15px 15px 15px;
-        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-}
-
-.dropdown-content a {
-        color: #ffffff;
-        padding: 8px 10px;
-        text-decoration: none;
-        display: block;
-        transition: 0.1s;
-}
-
-.dropdown-content a:hover {
-        background-color: #ffffff;
-        color: #212121;
-}
-
-.dropdown-content a:focus {
-        background-color: #212121;
-        color: #ffffff;
-}
-
-.dropdown-content #top:hover {
-        border-radius: 0px 13px 0px 0px;
-}
-
-.dropdown-content #bottom:hover {
-        border-radius: 0px 0px 13px 13px;
-}
-
-.paste-button:hover button {
-        border-radius: 15px 15px 0px 0px;
-}
-
-.paste-button:hover .dropdown-content {
-        display: block;
-}
-
-/* ЦЕНТРАЛЬНАЯ ЧАСТЬ */
-
-.user{
-        margin-top: 20px;
-        display: inline-flex;
-        flex-direction: row;
-        margin-left: 40px;
-}
-.user-photo {
+    }
+    
+    .hello {
+        font-size: 36px;
+        margin: 0;
+        color: var(--color);
+    }
+    
+    .header-button, .header-profile {
+        background-color: var(--primary-color);
+        border: none;
+        color: var(--color);
+        padding: 10px 15px;
+        margin: 0 5px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    
+    .header-profile i {
+        font-size: 24px;
+    }
+    
+    .main-block {
         display: flex;
         flex-direction: column;
-        align-items: center; /* Центрируем содержимое */
-        position: relative; /* Для позиционирования кнопки */
-}
-.profile-photo {
+        align-items: center;
+        padding: 40px;
+    }
+    
+    .user {
+        display: flex;
+        align-items: center;
+        margin-bottom: 60px;
+    }
+    
+    .user-photo {
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .profile-photo {
         width: 150px;
         height: 150px;
         border-radius: 50%;
         object-fit: cover;
-        cursor:auto; 
-        position: relative;
-}
-
-.buttons {
-        display: none; /* Изначально скрыты */
-        position: absolute; /* Позиционирование поверх фотографии */
+    }
+    
+    .buttons {
+        display: none;
+        position: absolute;
+        top: 0;
         left: 0;
-        bottom: 0;
         width: 100%;
-}
-
-.user-photo:hover .buttons {
-        display: flex; /* Показать кнопки при наведении */
-        flex-direction: column; /* Кнопки друг под другом */
-}
-
-.user-info{
-        margin-top: -23px;
-        margin-left: 40px;
+        height: 100%;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        flex-direction: column;
+    }
+    
+    .user-photo:hover .buttons {
+        display: flex;
+    }
+    
+    .user-info {
+        margin-left: 20px;
+    }
+    
+    .nickname {
+        font-size: 30px;
+        margin: 0;
+    }
+    
+    .other-info li {
+        list-style: none;
+        font-size: 18px;
+        margin: 5px 0;
+    }
+    
+    #create-game {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
+    }
+    
+    #players_count, #bet {
+        padding: 14.5px;
+        margin: 0 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 15px;
+        background-color: #9191911f;
+        color: var(--color);
+        backdrop-filter: blur(15px);
+        outline: none;
+        width: 300px;
+        text-align: center;
+    }
+    
+    #create-game input[type="submit"] {
+        background-color: var(--primary-color);
+        color: var(--color);
+        padding: 13px;
+        border-radius: 5px;
+        border: none;
+        font-size: 18px;
+        letter-spacing: 1.5px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.1s ease-in-out;
+    }
+    
+    #create-game input[type="submit"]:hover {
+        box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.15);
+        transform: scale(1.02);
+    }
+    
+    #games {
+        text-align: center;
+        margin-top: 20px;
+    }
+    #games {
         display: flex;
         flex-direction: column;
-}
-.user-info>h1{
-        margin-bottom: 0px;
-        font-size: 35px;
-        color: rgb(255, 255, 255);
-}
-.other-info{
-        margin-top: 3px;
-        margin-left: -20px;
+        align-items: center;
+        margin-top: 20px;
+    }
+    
+    .game {
+        background-color: var(--primary-color);
+        color: var(--color);
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px 0;
+        width: 80%;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .game-info {
+        flex-grow: 1;
+    }
+    
+    .game button {
+        background-color: #f5a623;
+        border: none;
+        color: var(--color);
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    .game button:hover {
+        background-color: #f39c12;
+    }
+    
 
-}
-.other-info>li{
-        font-size: 20px;
-        margin: 3px;
-        color: rgb(255, 255, 255);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    .theme-btn-container {
+        position: absolute;
+        left: 0;
+        bottom: 2rem;
+    }
+    
+    .theme-btn {
+        cursor: pointer;
+        transition: all 0.3s ease-in;
+    }
+    
+    .theme-btn:hover {
+        width: 40px !important;
+    }
+    
+    @keyframes wobble {
+        0% {
+            transform: scale(1.025);
+            -webkit-transform: scale(1.025);
+            -moz-transform: scale(1.025);
+            -ms-transform: scale(1.025);
+            -o-transform: scale(1.025);
+        }
+        25% {
+            transform: scale(1);
+            -webkit-transform: scale(1);
+            -moz-transform: scale(1);
+            -ms-transform: scale(1);
+            -o-transform: scale(1);
+        }
+        75% {
+            transform: scale(1.025);
+            -webkit-transform: scale(1.025);
+            -moz-transform: scale(1.025);
+            -ms-transform: scale(1.025);
+            -o-transform: scale(1.025);
+        }
+        100% {
+            transform: scale(1);
+            -webkit-transform: scale(1);
+            -moz-transform: scale(1);
+            -ms-transform: scale(1);
+            -o-transform: scale(1);
+        }
 }

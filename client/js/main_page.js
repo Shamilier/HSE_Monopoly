@@ -1,3 +1,74 @@
+let docTitel = document.title;
+window.addEventListener("blur", () =>{document.title = "Come Back :(";});
+window.addEventListener("focus", () => {document.title = docTitel;});
+const themes = [
+    {
+        background: "#1A1A2E",
+        color: "#FFFFFF",
+        primaryColor: "#0F3460"
+    },
+    {
+        background: "#461220",
+        color: "#FFFFFF",
+        primaryColor: "#E94560"
+    },
+    {
+        background: "#192A51",
+        color: "#FFFFFF",
+        primaryColor: "#967AA1"
+    },
+    {
+        background: "#F7B267",
+        color: "#000000",
+        primaryColor: "#F4845F"
+    },
+    {
+        background: "#F25F5C",
+        color: "#000000",
+        primaryColor: "#642B36"
+    },
+    {
+        background: "#231F20",
+        color: "#FFF",
+        primaryColor: "#BB4430"
+    }
+];
+
+const setTheme = (theme) => {
+    const root = document.querySelector(":root");
+    root.style.setProperty("--background", theme.background);
+    root.style.setProperty("--color", theme.color);
+    root.style.setProperty("--primary-color", theme.primaryColor);
+    root.style.setProperty("--glass-color", theme.glassColor);
+    // Сохраняем выбранную цветовую схему в localStorage
+    localStorage.setItem("selectedTheme", JSON.stringify(theme));
+};
+
+const displayThemeButtons = () => {
+    const btnContainer = document.querySelector(".theme-btn-container");
+    themes.forEach((theme) => {
+        const div = document.createElement("div");
+        div.className = "theme-btn";
+        div.style.cssText = `background: ${theme.background}; width: 25px; height: 25px`;
+        btnContainer.appendChild(div);
+
+        div.addEventListener("click", () => {
+            setTheme(theme); // Применяем цветовую схему
+        });
+    });
+};
+
+// При загрузке страницы проверяем, есть ли сохраненная цветовая схема в localStorage
+document.addEventListener("DOMContentLoaded", function() {
+    const selectedTheme = localStorage.getItem("selectedTheme");
+    if (selectedTheme) {
+        const parsedTheme = JSON.parse(selectedTheme);
+        setTheme(parsedTheme); // Применяем сохраненную цветовую схему при загрузке страницы
+    }
+});
+
+displayThemeButtons();
+
 async function getUserData() {
     try {
         const response = await fetch('/api/userinfo');
@@ -74,18 +145,24 @@ ws.onmessage = (event) => {
     else if (message.type === 'gamesList') {
         const gamesListElement = document.getElementById("games");
         gamesListElement.innerHTML = ''; // Очищаем список игр
-
+    
         message.games.forEach((game) => {
             const gameElement = document.createElement("div");
-            gameElement.innerHTML = `Игра ${game.id}: Карта: ${game.map}; Ставка: ${game.bet}; Игроки(${game.players_id.length}/${game.players_count}): ${game.players_id}` ;
-            if (game.players_id.includes(userData.nickname)){
-
+            gameElement.classList.add("game");
+            
+            const gameInfoElement = document.createElement("div");
+            gameInfoElement.classList.add("game-info");
+            gameInfoElement.innerHTML = `Игра : Ставка: ${game.bet}; Игроки(${JSON.parse(game.players_id).length}/${game.players_count}): ${JSON.parse(game.players_id).join(", ")}` ;
+            gameElement.appendChild(gameInfoElement);
+    
+            console.log(`Игра ${game.id}: Карта: ${game.map}; Ставка: ${game.bet}; Игроки(${JSON.parse(game.players_id).length}/${game.players_count}): ${JSON.parse(game.players_id).join(", ")}`)
+    
+            if (JSON.parse(game.players_id).includes(userData.nickname)){
                 const leaveButton = document.createElement("button");
                 leaveButton.innerText = "Выйти";
                 leaveButton.addEventListener("click", function() { leaveGame(game.id); });
                 gameElement.appendChild(leaveButton);
             } else {
-
                 const joinButton = document.createElement("button");
                 joinButton.innerText = "Присоединиться";
                 joinButton.addEventListener("click", function() { joinGame(game.id); });
@@ -93,6 +170,7 @@ ws.onmessage = (event) => {
             }
             gamesListElement.appendChild(gameElement);
         });
+    
     } else if (message.type === "startGame"){
         window.location.href = `./main_page/${message.gameId}`;
     } else if (message.type === "reconnect"){
@@ -107,7 +185,6 @@ ws.onmessage = (event) => {
     }
 };
 function joinGame(gameId) {
-    console.log(userData);
     ws.send(JSON.stringify({ type: 'joinGame', gameId: gameId, nickname : userData.nickname}));
 }
 function leaveGame(gameId){
@@ -117,9 +194,7 @@ function leaveGame(gameId){
 
 const send = (event) => {
     event.preventDefault();
-    const password = document.getElementById("password").value;
     const players_count = document.getElementById("players_count").value;
-    const map = document.getElementById("map").value;
     const bet = document.getElementById("bet").value;
     const nickname = userData.nickname;
     if (players_count < 2 || players_count > 4 ){
@@ -130,9 +205,7 @@ const send = (event) => {
     } else {
         ws.send(JSON.stringify({
             type: 'createGame', // Убедись, что сервер обрабатывает этот тип сообщения
-            password, 
             players_count, 
-            map, 
             bet,
             nickname
         }));
