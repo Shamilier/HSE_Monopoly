@@ -10,6 +10,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
 </head>
 <body>
+    <div id="overlay" class="overlay">
+        <div class="popup">
+            <h2>Игра окончена</h2>
+            <p id="winner-message"></p>
+            <button onclick="closePopup()">Закрыть</button>
+        </div>
+    </div>
     <!-- Информационная панель -->
     <div id="info-panel">
         <div id="left-menu">

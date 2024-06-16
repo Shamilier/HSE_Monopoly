@@ -199,6 +199,9 @@ function s(){
                 const displayToNikname = message.nickname;
                 displayBuyButton(position, -1, -1, -1, -1, displayToNikname);
                 break
+            case 'END_GAME':
+                const winner = message.winner;
+                end_game(winner);
             default:
                 console.error(`Неизвестный тип сообщения: ${message.type}`);
         }
@@ -1642,6 +1645,27 @@ async function INFORMATION() {
 
 
 
+async function end_game(winner) {
+    const gameId = getGameIdFromUrl();
+    const fullData = await getBoardData(gameId);
+    const boardData = fullData.board;
+    
+    // Затемняем поле и отображаем всплывающее окно
+    showEndGamePopup(winner);
+}
 
+function showEndGamePopup(winner) {
+    const overlay = document.getElementById('overlay');
+    const winnerMessage = document.getElementById('winner-message');
+    
+    winnerMessage.textContent = `Победитель: ${winner}`;
+    overlay.classList.add('show');
+}
+
+function closePopup() {
+    const overlay = document.getElementById('overlay');
+    overlay.classList.remove('show');
+    window.location.href = 'https://www.hse-monopoly.ru/main_page.html';
+}
 // ************************************************************************************************************************
 
