@@ -703,7 +703,7 @@ function s(){
                         return ws.send(JSON.stringify({ type: 'error', message: 'Ошибка или игра не найдена.' }));
                     }
                     let game = results[0];
-                    let players_id = JSON.parse(game.players_id);
+                    let players_id = game.players_id;
                     players_id = players_id.filter(playerNickname => playerNickname !== nickname);
                     if (players_id.length === 0){
                         delete ClientGames[nickname];
@@ -907,7 +907,7 @@ function s(){
                     if (results.length > 0) {
                         const playerColor = results[0].color;
                         const playerBalance = results[0].balance;
-                        let properties = results[0].properties ? JSON.parse(results[0].properties) : {};
+                        let properties = results[0].properties ? results[0].properties : {};
             
                         // Запрос для получения стоимости поля, данных и типа
                         const queryCostData = "SELECT cost, data, type, lay FROM game_cells WHERE id = ? AND position = ?";
@@ -918,7 +918,7 @@ function s(){
                             }
             
                             const cost = results[0].cost;
-                            const data = JSON.parse(results[0].data);
+                            const data = results[0].data;
                             const [type, additionalInfo] = results[0].type.split(".");
                             const lay = results[0].lay;
             
