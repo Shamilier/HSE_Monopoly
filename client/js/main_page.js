@@ -107,6 +107,7 @@ ws.onmessage = (event) => {
     }
 };
 function joinGame(gameId) {
+    console.log(userData);
     ws.send(JSON.stringify({ type: 'joinGame', gameId: gameId, nickname : userData.nickname}));
 }
 function leaveGame(gameId){

@@ -646,7 +646,6 @@ function s(){
                 const {type, gameId , nickname} = message;
                 
                 if (ClientGames[nickname]){
-                    // Если человек уже учавствует в какой-то игре 
                     console.log('Вы уже учавствуете в другой игре');
                     return ws.send(JSON.stringify({ type: 'create_game_error', message: 'Вы уже учавствуете в другой игре' }));
                 } else {
@@ -659,7 +658,7 @@ function s(){
                         }
                 
                         let game = results[0];
-                        let players_id = JSON.parse(game.players_id);
+                        let players_id = game.players_id;
                         let status = game.status;
                         if (status != -1){
                             console.error('Игра заполнена', error);
