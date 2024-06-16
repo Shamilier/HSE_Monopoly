@@ -77,9 +77,8 @@ ws.onmessage = (event) => {
 
         message.games.forEach((game) => {
             const gameElement = document.createElement("div");
-            gameElement.innerHTML = `Игра ${game.id}: Карта: ${game.map}; Ставка: ${game.bet}; Игроки(${JSON.parse(game.players_id).length}/${game.players_count}): ${JSON.parse(game.players_id)}` ;
-            console.log(`Игра ${game.id}: Карта: ${game.map}; Ставка: ${game.bet}; Игроки(${JSON.parse(game.players_id).length}/${game.players_count}): ${JSON.parse(game.players_id)}`)
-            if (JSON.parse(game.players_id).includes(userData.nickname)){
+            gameElement.innerHTML = `Игра ${game.id}: Карта: ${game.map}; Ставка: ${game.bet}; Игроки(${game.players_id.length}/${game.players_count}): ${game.players_id}` ;
+            if (game.players_id.includes(userData.nickname)){
 
                 const leaveButton = document.createElement("button");
                 leaveButton.innerText = "Выйти";
