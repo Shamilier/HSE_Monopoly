@@ -2,7 +2,7 @@
 // ************************************************************************************************************************
 
 
-const ws = new WebSocket("ws://127.0.0.1:3000");
+const ws = new WebSocket("wss://hsemonopoly-production.up.railway.app");
 let isWebSocketSetup = false;
 let isDiceButtonActive = false;
 let lastRollDiceHandler = null;
