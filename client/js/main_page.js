@@ -152,12 +152,12 @@ ws.onmessage = (event) => {
             
             const gameInfoElement = document.createElement("div");
             gameInfoElement.classList.add("game-info");
-            gameInfoElement.innerHTML = `Игра : Ставка: ${game.bet}; Игроки(${JSON.parse(game.players_id).length}/${game.players_count}): ${JSON.parse(game.players_id).join(", ")}` ;
+            gameInfoElement.innerHTML = `Игра : Ставка: ${game.bet}; Игроки(${game.players_id.length}/${game.players_count}): ${game.players_id.join(", ")}` ;
             gameElement.appendChild(gameInfoElement);
     
-            console.log(`Игра ${game.id}: Карта: ${game.map}; Ставка: ${game.bet}; Игроки(${JSON.parse(game.players_id).length}/${game.players_count}): ${JSON.parse(game.players_id).join(", ")}`)
+            console.log(`Игра ${game.id}: Карта: ${game.map}; Ставка: ${game.bet}; Игроки(${game.players_id.length}/${game.players_count}): ${game.players_id.join(", ")}`)
     
-            if (JSON.parse(game.players_id).includes(userData.nickname)){
+            if (game.players_id.includes(userData.nickname)){
                 const leaveButton = document.createElement("button");
                 leaveButton.innerText = "Выйти";
                 leaveButton.addEventListener("click", function() { leaveGame(game.id); });
