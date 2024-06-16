@@ -7,7 +7,7 @@ const { Server } = require("ws");
 const { v4: uuid } = require("uuid");
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
-const https = require('https');
+const https = require('http');
 require('dotenv').config();
 
 const gamedb = mysql.createPool({
@@ -21,12 +21,12 @@ const gamedb = mysql.createPool({
 // Настройка Express
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.use((req, res, next) => {
-    if (req.headers['x-forwarded-proto'] !== 'https') {
-        return res.redirect(`https://${req.headers.host}${req.url}`);
-    }
-    next();
-});
+// app.use((req, res, next) => {
+//     if (req.headers['x-forwarded-proto'] !== 'https') {
+//         return res.redirect(`https://${req.headers.host}${req.url}`);
+//     }
+//     next();
+// });
 
 
 function generateRandomDiceValues() {
@@ -377,7 +377,7 @@ app.get('/api/game/:gameId/currentTurn', (req, res) => {
 // ----------------------------------------------------------------------
 // WebSocket сервер на том же порту, что и Express
 const expressServer = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-const wss = new Server({ server: expressServer });
+const ws = new Server({ server: expressServer });
 
 let ClientConnections = {};
 let ClientGames = {};
@@ -565,7 +565,7 @@ function updatePosition(dice1, dice2, gameId, nickname, nextPlayerColor, current
 
 
 function s(){
-    wss.on("connection", (ws) => {
+    ws.on("connection", (ws) => {
         console.log(`New connection -_-`);
     // 
         ws.on("message", (rawMessage) => {
