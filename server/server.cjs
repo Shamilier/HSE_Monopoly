@@ -415,7 +415,7 @@ function checkFullness(gameId){
         let tmpGameId = game.id;
         let colors = ['red', 'blue', 'green', 'yellow'];
         const query = 'UPDATE cre SET status = ? WHERE id = ?';
-        let players_id = JSON.parse(game.players_id);
+        let players_id = game.players_id;
         players_id.forEach((player_id, index) => {
             // Выбираем цвет для игрока
             let color = colors[index]; 
@@ -658,6 +658,7 @@ function s(){
                         }
                 
                         let game = results[0];
+                        console.log(results);
                         let players_id = game.players_id;
                         let status = game.status;
                         if (status != -1){
