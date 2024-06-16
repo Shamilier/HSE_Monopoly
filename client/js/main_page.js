@@ -62,6 +62,7 @@ function s(){
 
 ws.onmessage = (event) => {
     const message = JSON.parse(event.data);
+    console.log(message);
     if (message.type === "HELLO"){
         requestGamesList(); // При установке соединения отправляем запрос на получение списка игр
     } 

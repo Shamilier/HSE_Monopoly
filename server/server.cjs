@@ -393,7 +393,7 @@ function broadcastGamesList() {
             console.error('Ошибка получения списка игр:', error);
             return;
         }
-
+        console.log(results);
         const gamesList = JSON.stringify({ type: 'gamesList', games: results });
         Object.values(ClientConnections).forEach(ws => {
             ws.send(gamesList);
