@@ -48,7 +48,7 @@ function viewPhoto() {
 // ------------------------------------
 
 const PORT = 3306; 
-const ws = new WebSocket(`ws://monorail.proxy.rlwy.net`);
+const ws = new WebSocket('wss://hsemonopoly-production.up.railway.app')
 const userData = await getUserData();
 s();
 function s(){
