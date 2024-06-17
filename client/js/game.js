@@ -14,7 +14,7 @@ let lastLayHandler = null;
 let lastCancelBuildHandler = null;
 let buildHandlers = [];
 let layHandlers = [];
-let COLORS = ['red', 'blue', 'yellow', 'green'];
+let COLORS = ['red', 'blue'];
 s();
 // ---------------------------------------
 
