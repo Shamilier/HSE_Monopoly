@@ -1107,11 +1107,11 @@ function s(){
                                 }
                                 const nicknameWhoOwns = result[0].player_id;
                                 const ubdateBalance = "UPDATE state SET balance = balance - ?, curr_status = ? WHERE id = ? AND player_id = ?";
-                                gamedb.query(ubdateBalance, [cellCost, "NULL",gameId, nickname], (error) => {
+                                gamedb.query(ubdateBalance, [cellCost, "NULL", gameId, nickname], (error) => {
                                     if (error){
                                         console.log("Ошибка Payed, 2", error);
                                     } else{
-                                        gamedb.query(ubdateBalance, [-cellCost, gameId, nicknameWhoOwns], (error) => {
+                                        gamedb.query(ubdateBalance, [-cellCost, "NULL", gameId, nicknameWhoOwns], (error) => {
                                             if (error){
                                                 console.log("Ошибка Payed, 2", error);
                                             } else{
