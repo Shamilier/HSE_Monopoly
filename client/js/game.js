@@ -169,7 +169,8 @@ function s(){
                 const whoo = message.nickname;
                 const {oldPosition} = message;
                 const {currentPlayerColor} = message;
-                updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, oldPosition, currentPlayerColor);
+                const {is_double} = message;
+                updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, oldPosition, currentPlayerColor, is_double);
                 break;
             case 'fieldBought':
                 afterBought();
@@ -178,7 +179,8 @@ function s(){
                 const cell_owner = message.cellOwner;
                 const cell_cost = message.cellCost;
                 const {prev_buttons} = message;
-                afterLay(cell_owner, cell_cost, prev_buttons);
+                const iss_double = message.is_double;
+                afterLay(cell_owner, cell_cost, prev_buttons, iss_double);
                 break;
             case 'jumpJail':
                 const {color} = message;
@@ -189,7 +191,8 @@ function s(){
                 const cellOwnerPay = message.cellOwner;
                 const cellCostPay = message.cellCost;
                 const {nickname} = message;
-                displayPayButton(cellOwnerPay, cellCostPay, nickname);
+                const is__double = message.is_double
+                displayPayButton(cellOwnerPay, cellCostPay, nickname, is__double);
                 break;
             case 'House':
                 afterHouse();
@@ -197,7 +200,8 @@ function s(){
             case 'displayBuyButtonAgain':
                 const {position} = message;
                 const displayToNikname = message.nickname;
-                displayBuyButton(position, -1, -1, -1, -1, displayToNikname);
+                const is_doublee = message.is_double;
+                displayBuyButton(position, -1, -1, -1, -1, displayToNikname, is_doublee);
                 break
             case 'END_GAME':
                 const winner = message.winner;
@@ -697,7 +701,7 @@ async function jumpJail(color){
 }
 
 
-async function afterLay(cell_owner, cell_cost, prev_buttons){
+async function afterLay(cell_owner, cell_cost, prev_buttons, is_double){
     const gameId = getGameIdFromUrl();
     const fullData = await getBoardData(gameId);
     const boardData = fullData.board;
@@ -707,9 +711,9 @@ async function afterLay(cell_owner, cell_cost, prev_buttons){
     playersData.forEach(player =>{
         console.log(player);
         if (player.curr_status === "BuyField"){
-            displayBuyButton(player.position, -1, -1, -1, -1, player.player_id);
+            displayBuyButton(player.position, -1, -1, -1, -1, player.player_id, is_double);
         } else if (player.curr_status === "PayFee"){
-            displayPayButton(cell_owner, cell_cost, player.player_id);
+            displayPayButton(cell_owner, cell_cost, player.player_id, is_double);
         }
         else {
             displayRollDiceButton();
@@ -765,7 +769,7 @@ function Animacion(oldPosition, pos, existingToken, callback) {
 }
 
 
-async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, oldPosition, currentPlayerColor) {
+async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, oldPosition, currentPlayerColor, is_double) {
     const gameId = getGameIdFromUrl();
     const fullData = await getBoardData(gameId);
     const boardData = fullData.board;
@@ -801,9 +805,9 @@ async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, 
         ws.send(JSON.stringify({ type: 'jail!', gameId: gameId, position: pos, nickname: whoo }));
     } else if ((cellOwner === "white")) {
         // Отображение кнопки покупки
-        displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, whoo);
+        displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, whoo, is_double);
     } else if (fieldType === "tax"){
-        displayPayButton(cellOwner, cellCost, whoo, "tax")
+        displayPayButton(cellOwner, cellCost, whoo, is_double ,"tax")
     } else {
         playersData.forEach(player => {
             if (player.turn === 1) {
@@ -829,7 +833,7 @@ async function getCurrentPlayerInfo(gameId) {
     }
 }
 
-async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
+async function displayPayButton(cellOwner, cellCost, whoo, is_double ,type = "fee"){
     if( type === "fee"){
         const prev_buttons = "PayFee";
     // console.log(whoo);
@@ -871,9 +875,12 @@ async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
                 layButton.style.display = 'none';
                 const len = document.querySelectorAll('#players-info .player');
                 let colors = COLORS.slice(0, len);
+                if (is_double > 0){
+                    dimNonPlayerCellsForLay(colors[colors.indexOf(currentColor)], prev_buttons, cellOwner, cellCost, whoo, -1); // Затемняем ячейки, не принадлежащие текущему игроку
+                } else {
+                    dimNonPlayerCellsForLay(colors[(colors.indexOf(currentColor) - 1 + colors.length) % colors.length], prev_buttons, cellOwner, cellCost, whoo, -1); // Затемняем ячейки, не принадлежащие текущему игроку
+                }
                 
-                dimNonPlayerCellsForLay(COLORS[(COLORS.indexOf(currentColor) - 1 + COLORS.length) % COLORS.length], prev_buttons, cellOwner, cellCost, whoo, -1); // Затемняем ячейки, не принадлежащие текущему игроку
-
                 if (layHandlers.length) {
                     layHandlers.forEach(({cell, handler}) => {
                         cell.removeEventListener('click', handler);
@@ -934,7 +941,7 @@ async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
     
 }
 
-async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, whoo) {
+async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, whoo, is_double) {
     try {
         const prev_buttons = 'BuyField';
         const gameId = getGameIdFromUrl();
@@ -995,7 +1002,14 @@ async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, w
                 buyButton.style.display = 'none';
                 cancelButton.style.display = 'none';
                 layButton.style = 'none';
-                dimNonPlayerCellsForLay(COLORS[(COLORS.indexOf(currentColor) - 1 + COLORS.length) % COLORS.length], prev_buttons, -1, -1, whoo, pos); // Затемняем ячейки, не принадлежащие текущему игроку
+                len  = document.querySelectorAll('#players-info .player').length;
+                let colors = COLORS.slice(0, len);
+                if(is_double > 0){
+                    dimNonPlayerCellsForLay(colors[colors.indexOf(currentColor)], prev_buttons, -1, -1, whoo, pos);
+                } else {
+                    dimNonPlayerCellsForLay(colors[(colors.indexOf(currentColor) - 1 + colors.length) % colors.length], prev_buttons, -1, -1, whoo, pos); // Затемняем ячейки, не принадлежащие текущему игроку
+
+                }
 
                 if (layHandlers.length) {
                     layHandlers.forEach(({cell, handler}) => {
@@ -1566,9 +1580,9 @@ async function displayCancelButton(prev_buttons, cellOwner, cellCost, whoo, pos)
                 if (prev_buttons === "RollDice"){
                     displayRollDiceButton();
                 } else if (prev_buttons === "PayFee"){
-                    displayPayButton(cellOwner, cellCost, whoo);
+                    displayPayButton(cellOwner, cellCost, whoo, -1);
                 } else if(prev_buttons === "BuyField"){
-                    displayBuyButton(pos, -1, -1, -1, -1, whoo);
+                    displayBuyButton(pos, -1, -1, -1, -1, whoo, -1);
                 }
             };
             cancelBuild.addEventListener('click', handleCancelBuildClick);

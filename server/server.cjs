@@ -506,10 +506,15 @@ function updatePosition(dice1, dice2, gameId, nickname, nextPlayerColor, current
     const diceTotal = dice1 + dice2;
     const updatePositionQuery = `
         UPDATE state
-        SET position = (position + ?) % 42
-        WHERE id = ? AND player_id = ?`;
+        SET position = (position + ?) % 42,
+        is_double = CASE
+            WHEN ? = ? THEN is_double + 1
+            ELSE 0
+        END
+        WHERE id = ? AND player_id = ?
+    `;
 
-    gamedb.query(updatePositionQuery, [diceTotal, gameId, nickname], (error, results) => {
+    gamedb.query(updatePositionQuery, [diceTotal, dice1, dice2, gameId, nickname], (error, results) => {
         if (error) {
             console.error('Ошибка при обновлении позиции:', error);
             return;
@@ -532,23 +537,28 @@ function updatePosition(dice1, dice2, gameId, nickname, nextPlayerColor, current
                 } if(cellData.position === 0){
                     updatePlayerBalance(gameId, nickname, 400000);
                 }
-                // } if (cellData.position === 2 || cellData.position === 23 || cellData.position === 40) {
-                //     PayTaxes();
-                // }
-                GamesWithPlayers[gameId].forEach(playerNickname => {
-                    if (ClientConnections[playerNickname]) {
-                        ClientConnections[playerNickname].send(JSON.stringify({ 
-                            type: 'redrawBoard',
-                            position: cellData.position,
-                            name: cellData.name,
-                            cost: cellData.cost,
-                            owner: cellData.owner,
-                            fieldType: cellData.type.split('.')[0].split(',')[0],
-                            nickname: nickname,
-                            oldPosition: cellData.position - diceTotal,
-                            currentPlayerColor: currentPlayerColor
-                        }));
+                query_double = "SELECT is_double FROM state WHERE id = ? AND player_id = ?";
+                gamedb.query(query_double, [gameId, nickname], (error, res)=>{
+                    if (error){
+                        console.log(error);
                     }
+                    const is_double = res[0].is_double;
+                    GamesWithPlayers[gameId].forEach(playerNickname => {
+                        if (ClientConnections[playerNickname]) {
+                            ClientConnections[playerNickname].send(JSON.stringify({ 
+                                type: 'redrawBoard',
+                                position: cellData.position,
+                                name: cellData.name,
+                                cost: cellData.cost,
+                                owner: cellData.owner,
+                                fieldType: cellData.type.split('.')[0].split(',')[0],
+                                nickname: nickname,
+                                oldPosition: cellData.position - diceTotal,
+                                currentPlayerColor: currentPlayerColor, 
+                                is_double:is_double
+                            }));
+                        }
+                    });
                 });
             } else if (dice1 === 0 & dice2 === 0){
                 GamesWithPlayers[gameId].forEach(playerNickname => {
@@ -896,7 +906,7 @@ function s(){
     
             
                 // Запрос для получения цвета игрока, баланса и свойств
-                const queryColorBalanceProperties = "SELECT color, balance, properties FROM state WHERE id = ? AND player_id = ?";
+                const queryColorBalanceProperties = "SELECT color, balance, properties, is_double FROM state WHERE id = ? AND player_id = ?";
                 gamedb.query(queryColorBalanceProperties, [gameId, nickname], (error, results) => {
                     if (error) {
                         console.error('Ошибка при извлечении цвета, баланса и свойств:', error);
@@ -907,6 +917,7 @@ function s(){
                         const playerColor = results[0].color;
                         const playerBalance = results[0].balance;
                         let properties = results[0].properties ? results[0].properties : {};
+                        const is_double = results[0].is_double;
             
                         // Запрос для получения стоимости поля, данных и типа
                         const queryCostData = "SELECT cost, data, type, lay FROM game_cells WHERE id = ? AND position = ?";
@@ -995,6 +1006,7 @@ function s(){
                                             type: 'displayBuyButtonAgain',
                                             position: position,
                                             nickname: nickname,
+                                            is_double: is_double
                                         }));
                                     }
                                 });
@@ -1041,7 +1053,7 @@ function s(){
                 });
             } else if (message.type === "PayMessage"){// owner - цвет игрока который владеет полем
                 const { gameId, position, nickname, cellCost, cellOwner, currentPlayerColor } = message;
-                const queryColorBalanceProperties = "SELECT color, balance, properties_cost, position FROM state WHERE id = ? AND player_id = ?";
+                const queryColorBalanceProperties = "SELECT color, balance, properties_cost, position, is_double FROM state WHERE id = ? AND player_id = ?";
                 gamedb.query(queryColorBalanceProperties, [gameId, nickname], (error, results) => {
                     if (error) {
                         console.error('Ошибка при извлечении цвета, баланса и свойств:', error);
@@ -1057,6 +1069,7 @@ function s(){
                         const playerColor = results[0].color;
                         const playerBalance = results[0].balance;
                         const properties_cost = results[0].properties_cost;
+                        const is_double = results[0].is_double;
                         if (playerBalance + properties_cost  < cellCost){
                             text = `Проиграл - не может выплатить аренду!`;
                             sendMessage(text, nickname, gameId);
@@ -1081,7 +1094,8 @@ function s(){
                             gameId: gameId, 
                             cellOwner: cellOwner,
                             cellCost: cellCost,
-                            nickname: nickname
+                            nickname: nickname,
+                            is_double: is_double
                         }));
                     }
                 });
@@ -1218,7 +1232,7 @@ function s(){
                                 if (error){
                                     console.log(error);
                                 }
-                                const query3 = "SELECT properties, position FROM state WHERE id = ? AND player_id = ?";
+                                const query3 = "SELECT properties, position, is_double FROM state WHERE id = ? AND player_id = ?";
                                 gamedb.query(query3, [gameId, nickname], (error, result2) =>{
                                     if (error){
                                         console.log(error);
@@ -1233,6 +1247,7 @@ function s(){
                                         }
 
                                         let curr_players_position = result2[0].position;
+                                        const is_double = result2[0].is_double;
                                         tmp_query = "SELECT owner, cost FROM game_cells WHERE id = ? AND position = ?";
                                         gamedb.query(tmp_query, [gameId, curr_players_position], (error, result3)=>{
                                             if (error){
@@ -1255,7 +1270,8 @@ function s(){
                                                                 type: 'fieldLayed', 
                                                                 cellOwner: cell_owner,
                                                                 cellCost: cell_cost,
-                                                                prev_buttons:prev_buttons
+                                                                prev_buttons:prev_buttons,
+                                                                is_double: is_double
                                                             }));
                                                         }
                                                     });
