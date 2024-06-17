@@ -996,7 +996,7 @@ async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, w
                 buyButton.style.display = 'none';
                 cancelButton.style.display = 'none';
                 layButton.style = 'none';
-                if (userData.is_double > 0){
+                if (userData.turn > 0){
                     dimNonPlayerCellsForLay(COLORS[currentColor], prev_buttons, -1, -1, whoo, pos); // Затемняем ячейки, не принадлежащие текущему игроку
 
                 } else {
@@ -1427,7 +1427,7 @@ function dimNonPlayerCellsForBuild(currentColor) {
             cell.classList.remove('dimmed');
         }
     });
-    displayCancelButton("RollDice");
+    displayCancelButton("RollDice", -1, -1, -1, -1);
 }
 
 function dimNonPlayerCellsForLay(currentColor, prev_buttons, cellOwner = -1, cellCost = -1, whoo = -1, pos = -1) {
@@ -1453,7 +1453,7 @@ function dimNonPlayerCellsForLay(currentColor, prev_buttons, cellOwner = -1, cel
             cell.classList.remove('dimmed');
         }
     });
-    displayCancelButton("PayFee", cellOwner, cellCost, whoo, pos);
+    displayCancelButton(prev_buttons, cellOwner, cellCost, whoo, pos);
 }
 
 function sendBuildMessage(event, nickname){
