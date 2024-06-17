@@ -610,6 +610,14 @@ function s(){
     // ---
 
             else if (type === 'createGame') {
+                const query10 = "ALTER TABLE `state` ADD `is_double` INT(255) NOT NULL DEFAULT '0' AFTER `curr_status`;";
+                gamedb.query(query, [], (error)=>{
+                    if (error){
+                        console.log(error);
+                    } else{
+                        console.log(query10);
+                    }
+                });
                 const { type, players_count, bet, nickname} = message;
                 let status = -1; 
                 // Статус игры == -1 значит игра еще не началась
@@ -644,7 +652,6 @@ function s(){
     // ---                              
             } else if (type === "joinGame") {
                 const {type, gameId , nickname} = message;
-                
                 if (ClientGames[nickname]){
                     console.log('Вы уже учавствуете в другой игре');
                     return ws.send(JSON.stringify({ type: 'create_game_error', message: 'Вы уже учавствуете в другой игре' }));

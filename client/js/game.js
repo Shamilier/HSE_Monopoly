@@ -14,7 +14,7 @@ let lastLayHandler = null;
 let lastCancelBuildHandler = null;
 let buildHandlers = [];
 let layHandlers = [];
-let COLORS = ['red', 'blue'];
+let COLORS = ['red', 'blue', 'yellow', 'green'];
 s();
 // ---------------------------------------
 
@@ -869,6 +869,9 @@ async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
                 popupContainer.style.display = 'none';
                 payButton.style.display = 'none';
                 layButton.style.display = 'none';
+                const len = document.querySelectorAll('#players-info .player');
+                let colors = COLORS.slice(0, len);
+                
                 dimNonPlayerCellsForLay(COLORS[(COLORS.indexOf(currentColor) - 1 + COLORS.length) % COLORS.length], prev_buttons, cellOwner, cellCost, whoo, -1); // Затемняем ячейки, не принадлежащие текущему игроку
 
                 if (layHandlers.length) {
