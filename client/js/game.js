@@ -1664,12 +1664,12 @@ async function INFORMATION() {
         if (cellElement) {
             cellElement.addEventListener('click', event => {
                 const position = index;
-                if (serv_fields.includes(position)){
-                    const text = `Описание для поля ${index}`;
+                if (serv_fields.includes(index)){
+                    const text = cellData.discription;
                     showTooltip2(text); 
                 } else {
                     const imageSrc = `/images/1_im${index}.jpg`; // Путь к изображению для данного поля
-                    const text = `Описание для поля ${index}`; // Описание для данного поля
+                    const text = cellData.discription;
                     try {
                         showTooltip(imageSrc, text);
                     } catch {
