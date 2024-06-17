@@ -710,7 +710,7 @@ async function afterLay(cell_owner, cell_cost, prev_buttons){
             falg = 1;
         } else if (player.curr_status === "PayFee"){
             falg = 1;
-        } else if (playe.curr_status === "PayTax"){
+        } else if (player.curr_status === "PayTax"){
             falg = 1;
         }
     });
