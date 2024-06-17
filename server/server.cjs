@@ -611,7 +611,7 @@ function s(){
 
             else if (type === 'createGame') {
                 const query10 = "ALTER TABLE `state` ADD `is_double` INT(255) NOT NULL DEFAULT '0' AFTER `curr_status`;";
-                gamedb.query(query, [], (error)=>{
+                gamedb.query(query10, [], (error)=>{
                     if (error){
                         console.log(error);
                     } else{
