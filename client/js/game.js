@@ -703,19 +703,52 @@ async function afterLay(cell_owner, cell_cost, prev_buttons){
     const boardData = fullData.board;
     const playersData = fullData.players;
     updateCells(boardData, gameId);     // Обновление свойств ячеек
-
+    let falg = 0;
+    
     playersData.forEach(player =>{
-        console.log(player);
         if (player.curr_status === "BuyField"){
-            
-            displayBuyButton(player.position, -1, -1, -1, -1, player.player_id);
+            falg = 1;
         } else if (player.curr_status === "PayFee"){
-            displayPayButton(cell_owner, cell_cost, player.player_id);
+            falg = 1;
+        } else if (playe.curr_status === "PayTax"){
+            falg = 1;
         }
-        else {
-            displayRollDiceButton();
-        }
-    })
+    });
+    console.log(flag);
+
+    if (falg === 0){
+        playersData.forEach(player =>{
+            console.log(player);
+            if (player.curr_status === "BuyField"){
+                displayBuyButton(player.position, -1, -1, -1, -1, player.player_id);
+                return;
+            } else if (player.curr_status === "PayFee"){
+                displayPayButton(cell_owner, cell_cost, player.player_id);
+                return;
+            } else if (playe.curr_status === "PayTax"){
+                displayPayButton(cell_owner, cell_cost, player.player_id, "tax");
+                return;
+            }
+            else {
+                displayRollDiceButton();
+                return;
+            }
+        })
+    } else {
+        playersData.forEach(player =>{
+            console.log(player);
+            if (player.curr_status === "BuyField"){
+                displayBuyButton(player.position, -1, -1, -1, -1, player.player_id);
+                return;
+            } else if (player.curr_status === "PayFee"){
+                displayPayButton(cell_owner, cell_cost, player.player_id);
+                return;
+            } else if (playe.curr_status === "PayTax"){
+                displayPayButton(cell_owner, cell_cost, player.player_id, "tax");
+                return;
+            }
+        })
+    }
 }
 
 async function afterBought(){
@@ -831,8 +864,8 @@ async function getCurrentPlayerInfo(gameId) {
 }
 
 async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
-    const prev_buttons = "PayFee";
     if( type === "fee"){
+        const prev_buttons = "PayFee";
     // console.log(whoo);
         const gameId = getGameIdFromUrl();
         const turn_info = await getCurrentPlayerInfo(gameId);
@@ -900,6 +933,7 @@ async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
 
 
     } else if (type === 'tax'){
+        const prev_buttons = "PayTax";
         const gameId = getGameIdFromUrl();
         const turn_info = await getCurrentPlayerInfo(gameId);
         const currentPlayerId = turn_info.currentPlayer;
@@ -910,7 +944,7 @@ async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
         const popupContainer = document.getElementById('popupContainer');
         const payButton = document.getElementById('pay');
         const layButton = document.getElementById('lay');
-        if (whoo === nickname || userData.curr_status === "PayFee") {  
+        if (whoo === nickname || userData.curr_status === "PayTax") {  
             popupContainer.style.display = 'flex';
             payButton.style.display = 'inline-block';
             layButton.style.display = 'inline-block';
