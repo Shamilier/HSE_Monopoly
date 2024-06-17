@@ -707,6 +707,7 @@ async function afterLay(cell_owner, cell_cost, prev_buttons){
     playersData.forEach(player =>{
         console.log(player);
         if (player.curr_status === "BuyField"){
+            
             displayBuyButton(player.position, -1, -1, -1, -1, player.player_id);
         } else if (player.curr_status === "PayFee"){
             displayPayButton(cell_owner, cell_cost, player.player_id);
@@ -942,7 +943,7 @@ async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, w
         const currentPlayerId = turn_info.currentPlayer;
         const currentColor = turn_info.currentColor;
         const userData = await getUserData();
-        console.log("_~_~_~_~_~ ", userData, whoo);
+        console.log("_~_~_~_~_~ ", userData.nickname, whoo, userData.nickname === whoo);
         const nickname = userData.nickname;
 
         const popupContainer = document.getElementById('popupContainer');
@@ -995,7 +996,12 @@ async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, w
                 buyButton.style.display = 'none';
                 cancelButton.style.display = 'none';
                 layButton.style = 'none';
-                dimNonPlayerCellsForLay(COLORS[(COLORS.indexOf(currentColor) - 1 + COLORS.length) % COLORS.length], prev_buttons, -1, -1, whoo, pos); // Затемняем ячейки, не принадлежащие текущему игроку
+                if (userData.is_double > 0){
+                    dimNonPlayerCellsForLay(COLORS[currentColor], prev_buttons, -1, -1, whoo, pos); // Затемняем ячейки, не принадлежащие текущему игроку
+
+                } else {
+                    dimNonPlayerCellsForLay(COLORS[(COLORS.indexOf(currentColor) - 1 + COLORS.length) % COLORS.length], prev_buttons, -1, -1, whoo, pos); // Затемняем ячейки, не принадлежащие текущему игроку
+                }
 
                 if (layHandlers.length) {
                     layHandlers.forEach(({cell, handler}) => {
