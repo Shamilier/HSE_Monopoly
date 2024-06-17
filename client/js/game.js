@@ -702,8 +702,9 @@ async function afterLay(cell_owner, cell_cost, prev_buttons){
     const fullData = await getBoardData(gameId);
     const boardData = fullData.board;
     const playersData = fullData.players;
-    updateCells(boardData, gameId);     // Обновление свойств ячеек
-    let falg = 0;
+    updateCells(boardData, gameId);  // Обновление свойств ячеек
+
+    var falg = 0;
     
     playersData.forEach(player =>{
         if (player.curr_status === "BuyField"){
