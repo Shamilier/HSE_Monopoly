@@ -261,7 +261,7 @@ body {
 }
 
 #players-info {
-    width: 141%;
+    width: 100%;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
@@ -359,9 +359,9 @@ body {
         transform: scale(0.8);
     }
 }
-@media (min-width: 1600px) {
+@media (min-width: 800px) {
     body {
-        transform: scale(0.8);
+        transform: scale(1.5);
         transform-origin: top left;
     }
 }
