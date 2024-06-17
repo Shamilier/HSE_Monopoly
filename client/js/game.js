@@ -844,7 +844,7 @@ async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
         const popupContainer = document.getElementById('popupContainer');
         const payButton = document.getElementById('pay');
         const layButton = document.getElementById('lay');
-        if (whoo === nickname) {  
+        if (whoo === nickname || userData.curr_status === "PayFee") {  
             popupContainer.style.display = 'flex';
             payButton.style.display = 'inline-block';
             layButton.style.display = 'inline-block';
@@ -951,7 +951,7 @@ async function displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, w
         const cancelButton = document.getElementById('cancel');
         const layButton = document.getElementById('lay');
 
-        if (whoo === nickname) {   
+        if (whoo === nickname || userData.curr_status === "BuyField") {   
             popupContainer.style.display = 'flex';
             buyButton.style.display = 'inline-block';
             cancelButton.style.display = 'inline-block';
