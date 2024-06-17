@@ -817,7 +817,7 @@ async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, 
     // Обработка специальных полей
     if (cellOwner != 'white' && cellOwner != 'None' && cellOwner != currentPlayerColor){
         ws.send(JSON.stringify({ type: 'PayMessage', gameId: gameId, position: pos, nickname: whoo, cellCost:cellCost, cellOwner:cellOwner, currentPlayerColor:currentPlayerColor}));
-    }else if (['start', 'lottery', 'jail', 'delay', 'casino', 'back',].includes(fieldType)) {
+    }else if (['start', 'jail', 'delay', 'casino', 'back',].includes(fieldType)) {
         playersData.forEach(player => {
             if (player.turn === 1) {
                 displayRollDiceButton();
@@ -828,7 +828,7 @@ async function updateBoard(pos, cellName, cellCost, cellOwner, fieldType, whoo, 
     } else if ((cellOwner === "white")) {
         // Отображение кнопки покупки
         displayBuyButton(pos, cellName, cellCost, cellOwner, fieldType, whoo);
-    } else if (fieldType === "tax"){
+    } else if (fieldType === "tax" || fieldType === "lottery"){
         displayPayButton(cellOwner, cellCost, whoo, "tax")
     } else {
         playersData.forEach(player => {
