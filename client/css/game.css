@@ -361,7 +361,7 @@ body {
 }
 @media (min-width: 1600px) {
     body {
-        transform: scale(1.45);
+        transform: scale(1.25);
         transform-origin: top left;
     }
 }
