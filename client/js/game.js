@@ -831,8 +831,8 @@ async function getCurrentPlayerInfo(gameId) {
 }
 
 async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
+    const prev_buttons = "PayFee";
     if( type === "fee"){
-        const prev_buttons = "PayFee";
     // console.log(whoo);
         const gameId = getGameIdFromUrl();
         const turn_info = await getCurrentPlayerInfo(gameId);
@@ -910,7 +910,7 @@ async function displayPayButton(cellOwner, cellCost, whoo, type = "fee"){
         const popupContainer = document.getElementById('popupContainer');
         const payButton = document.getElementById('pay');
         const layButton = document.getElementById('lay');
-        if (whoo === nickname) {  
+        if (whoo === nickname || userData.curr_status === "PayFee") {  
             popupContainer.style.display = 'flex';
             payButton.style.display = 'inline-block';
             layButton.style.display = 'inline-block';

@@ -1288,8 +1288,8 @@ function s(){
                         const currentBalance = results[0].balance;
                         const taxAmount = currentBalance * 0.18;
                         const newBalance = currentBalance - taxAmount;
-                        const updateBalance = "UPDATE state SET balance = ? WHERE id = ? AND player_id = ?";
-                        gamedb.query(updateBalance, [newBalance, gameId, nickname], (error, results) => {
+                        const updateBalance = "UPDATE state SET balance = ?, curr_status = ? WHERE id = ? AND player_id = ?";
+                        gamedb.query(updateBalance, [newBalance, "NULL", gameId, nickname], (error, results) => {
                             if (error) {
                                 console.error('Ошибка при обновлении баланса:', error);
                                 return;
