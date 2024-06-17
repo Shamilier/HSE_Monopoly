@@ -610,25 +610,6 @@ function s(){
     // ---
 
             else if (type === 'createGame') {
-                const queries = [
-                    "UPDATE board SET data = JSON_SET(data, '$.h0', 12000) WHERE position = 2;",
-
-                    "UPDATE board SET data = JSON_SET(data, '$.h0', 12000) WHERE position = 4;",
-
-                    "UPDATE board SET data = JSON_SET(data, '$.h0', 120000) WHERE position = 39;",
-
-                    "UPDATE board SET data = JSON_SET(data, '$.h0', 120000) WHERE position = 41;"
-                ];
-                queries.forEach((query) => {
-                    gamedb.query(query, [], (error) => {
-                        if (error) {
-                            console.log(error);
-                        }else{
-                            console.log(query);
-                        }
-                    });
-                });
-
                 const { type, players_count, bet, nickname} = message;
                 let status = -1; 
                 // Статус игры == -1 значит игра еще не началась
