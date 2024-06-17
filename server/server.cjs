@@ -1238,7 +1238,7 @@ function s(){
                                         console.log(error);
                                     } else if (result2.length > 0){
 
-                                        let properties = JSON.parse(result2[0].properties);
+                                        let properties = result2[0].properties;
                                         const key = fieldType.split('.')[1];
                                         if (properties[key] > 1){
                                             properties[key] -= 1;
