@@ -697,60 +697,51 @@ async function jumpJail(color){
 }
 
 
-async function afterLay(cell_owner, cell_cost, prev_buttons){
+async function afterLay(cell_owner, cell_cost, prev_buttons) {
     const gameId = getGameIdFromUrl();
     const fullData = await getBoardData(gameId);
     const boardData = fullData.board;
     const playersData = fullData.players;
     updateCells(boardData, gameId);  // Обновление свойств ячеек
 
-    var falg = 0;
-    
-    playersData.forEach(player =>{
-        if (player.curr_status === "BuyField"){
-            falg = 1;
-        } else if (player.curr_status === "PayFee"){
-            falg = 1;
-        } else if (player.curr_status === "PayTax"){
-            falg = 1;
+    let flag = false; // Инициализация flag как boolean
+
+    // Проверка статуса всех игроков
+    playersData.forEach(player => {
+        if (player.curr_status === "BuyField" || player.curr_status === "PayFee" || player.curr_status === "PayTax") {
+            flag = true;
         }
     });
-    console.log(flag);
 
-    if (falg === 0){
-        playersData.forEach(player =>{
+    console.log(flag); // Логирование значения flag
+
+    if (flag) {
+        playersData.forEach(player => {
             console.log(player);
-            if (player.curr_status === "BuyField"){
+            if (player.curr_status === "BuyField") {
                 displayBuyButton(player.position, -1, -1, -1, -1, player.player_id);
-                return;
-            } else if (player.curr_status === "PayFee"){
+            } else if (player.curr_status === "PayFee") {
                 displayPayButton(cell_owner, cell_cost, player.player_id);
-                return;
-            } else if (playe.curr_status === "PayTax"){
+            } else if (player.curr_status === "PayTax") {
                 displayPayButton(cell_owner, cell_cost, player.player_id, "tax");
-                return;
             }
-            else {
-                displayRollDiceButton();
-                return;
-            }
-        })
+        });
     } else {
-        playersData.forEach(player =>{
+        playersData.forEach(player => {
             console.log(player);
-            if (player.curr_status === "BuyField"){
+            if (player.curr_status === "BuyField") {
                 displayBuyButton(player.position, -1, -1, -1, -1, player.player_id);
-                return;
-            } else if (player.curr_status === "PayFee"){
+            } else if (player.curr_status === "PayFee") {
                 displayPayButton(cell_owner, cell_cost, player.player_id);
-                return;
-            } else if (playe.curr_status === "PayTax"){
+            } else if (player.curr_status === "PayTax") {
                 displayPayButton(cell_owner, cell_cost, player.player_id, "tax");
-                return;
+            } else {
+                displayRollDiceButton();
             }
-        })
+        });
     }
 }
+
 
 async function afterBought(){
     const gameId = getGameIdFromUrl();
