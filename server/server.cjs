@@ -611,17 +611,13 @@ function s(){
 
             else if (type === 'createGame') {
                 const queries = [
-                    "ALTER TABLE `fields` ADD `initial_cost` INT(255) NOT NULL AFTER `num`;",
-                    "UPDATE `fields` SET `initial_cost`= 100000 WHERE field_id = '239,200,124';",
-                    "UPDATE `fields` SET `initial_cost`= 130000 WHERE field_id = '186,230,232';",
-                    "UPDATE `fields` SET `initial_cost`= 150000 WHERE field_id = '250,115,105';",
-                    "UPDATE `fields` SET `initial_cost`= 180000 WHERE field_id = '193,122,185';",
-                    "UPDATE `fields` SET `initial_cost`= 260000 WHERE field_id = '189,0,0';",
-                    "UPDATE `fields` SET `initial_cost`= 320000 WHERE field_id = '169,217,127';",
-                    "UPDATE `fields` SET `initial_cost`= 350000 WHERE field_id = '175,196,234';",
-                    "UPDATE `fields` SET `initial_cost`= 400000 WHERE field_id = '169,95,35';",
-                    "UPDATE `fields` SET `initial_cost`= 450000 WHERE field_id = '170,0,150';",
-                    "UPDATE `fields` SET `initial_cost`= 550000 WHERE field_id = '101,233,231';"
+                    "UPDATE board SET data = JSON_SET(data, '$.h0', 12000) WHERE position = 2;",
+
+                    "UPDATE board SET data = JSON_SET(data, '$.h0', 12000) WHERE position = 4;",
+
+                    "UPDATE board SET data = JSON_SET(data, '$.h0', 120000) WHERE position = 39;",
+
+                    "UPDATE board SET data = JSON_SET(data, '$.h0', 120000) WHERE position = 41;"
                 ];
                 queries.forEach((query) => {
                     gamedb.query(query, [], (error) => {
