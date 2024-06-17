@@ -1640,6 +1640,14 @@ function showTooltip(imageSrc, text) {
     tooltip.style.display = 'block';
 }
 
+function showTooltip2(text) {
+    const tooltip = document.getElementById('tooltip');
+    const tooltipText = document.getElementById('tooltipText');
+    
+    tooltipText.textContent = text;
+    tooltip.style.display = 'block';
+}
+
 // Функция для скрытия всплывающего окна
 function hideTooltip() {
     const tooltip = document.getElementById('tooltip');
@@ -1647,6 +1655,7 @@ function hideTooltip() {
 }
 
 async function INFORMATION() {
+    const serv_fields = [0, 2, 5, 9, 13, 19, 21, 23, 26, 30, 34, 40];
     const gameId = getGameIdFromUrl();
     const fullData = await getBoardData(gameId);
     const boardData = fullData.board;
@@ -1655,13 +1664,18 @@ async function INFORMATION() {
         if (cellElement) {
             cellElement.addEventListener('click', event => {
                 const position = index;
-                const imageSrc = `/images/1_im${index}.jpg`; // Путь к изображению для данного поля
-                const text = `Описание для поля ${index}`; // Описание для данного поля
-                try {
-                    showTooltip(imageSrc, text);
-                } catch {
-                    const imageSrc = `/images/test_photo.jpg`; // Путь к дефолтному изображению 
-                    showTooltip(imageSrc, text);
+                if (serv_fields.includes(position)){
+                    const text = `Описание для поля ${index}`;
+                    showTooltip2(text); 
+                } else {
+                    const imageSrc = `/images/1_im${index}.jpg`; // Путь к изображению для данного поля
+                    const text = `Описание для поля ${index}`; // Описание для данного поля
+                    try {
+                        showTooltip(imageSrc, text);
+                    } catch {
+                        const imageSrc = `/images/test_photo.jpg`; // Путь к дефолтному изображению 
+                        showTooltip(imageSrc, text);
+                    }
                 }
             });
         }
